@@ -15,7 +15,7 @@ int main(){
     TipoItem x; 
     int pos;
 
-    criaArquivos(MAXTABELA);
+    criaArquivos(20 + rand()%(MAXTABELA - 19));
     // Abre o arquivo de dados, lendo os itens armazenados no arquivo binario
     if ((arq = fopen("dados.bin","rb")) == NULL) {
         printf("Erro na abertura do arquivo\n"); 
@@ -69,9 +69,11 @@ void criaArquivos(long tam) {
         geraString(temp.dado2, 1000);
         geraString(temp.dado3, 5000);
 
-        fprintf(arq, "%d %ld %s %s\n", temp.chave, temp.dado1, temp.dado2, temp.dado3);
+        fprintf(arq, "%d %ld %s %s", temp.chave, temp.dado1, temp.dado2, temp.dado3);
+        if(i != (tam-1))
+            fprint(arq, "\n");
         fwrite(&temp, sizeof(TipoItem), 1, arqBin);
-
+        
         chaveAnterior = temp.chave;
     }
     fclose(arq);
