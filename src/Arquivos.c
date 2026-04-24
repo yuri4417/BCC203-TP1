@@ -46,14 +46,24 @@ void criaArquivo(int qtdTotal, int situacao) {
             break;
         case 3:
             geraAscendente(qtdTotal, arqRef);
-            int troca;
+            TipoItem item1, item2;
+            int posTroca;
             for (int i = 0; i < qtdTotal; i++) {
-                troca = i + rand() % (qtdTotal - i) + 1;
-                TipoItem troca;
-                
-                fseek(arqRef, i * sizeof(TipoItem), SEEK_SET);
+                posTroca = i + rand() % (qtdTotal - i);
 
-                
+
+                fseek(arqRef, i * sizeof(TipoItem), SEEK_SET);
+                fread(&item1, sizeof(TipoItem), 1, arqRef);
+
+                fseek(arqRef, posTroca * sizeof(TipoItem), SEEK_SET);
+                fread(&item2, sizeof(TipoItem), 1, arqRef);
+
+
+                fseek(arqRef, i * sizeof(TipoItem), SEEK_SET);
+                fwrite(&item2, sizeof(TipoItem), 1, arqRef);
+
+                fseek(arqRef, posTroca * sizeof(TipoItem), SEEK_SET);
+                fwrite(&item1, sizeof(TipoItem), 1, arqRef);
             }
             break;
     }
