@@ -11,6 +11,7 @@ int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave) {
 
     if (v[m].chave == chave)
         return m;
+
     else if (v[m].chave < chave)
         return pesquisaBinaria(v, m + 1, dir, chave);
     else
@@ -22,27 +23,27 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item) {
     TipoItem pagina[ITENSPAGINA];
     int i, quantitens;
     long desloc;
-    FILE *arq;
     // Procura pela pagina onde o item pode se encontrar
     i = 0; 
 
-    // Abre o arquivo de dados, lendo os itens armazenados no arquivo binario
-    if ((arq = fopen("dados.bin","rb")) == NULL) {
-        printf("Erro na abertura do arquivo\n"); 
-        return 0;
+    FILE *arq; 
+    if(!(arq = fopen("arqAscendente.bin", "rb"))) {
+        printf("Erro ao abrir o arquivo.\n");
+        return -1;
     }
 
     // Leitura das primeiras posições de cada pagina
     int pos = 0;
-    
-    while (fread(item, sizeof(TipoItem), 1, arq) == 1) { 
-        tabela[pos].chave = item->chave;
+    int chaveBusca = item->chave;
+    TipoItem temp;
+    while (fread(&temp, sizeof(TipoItem), 1, arq) == 1) { 
+        tabela[pos].chave = temp.chave;
         tabela[pos].posicao = pos+1;
         pos++;
         fseek(arq, sizeof(TipoItem) * 3, SEEK_CUR);
     }
 
-    while (i < pos && tabela[i].chave <= item->chave) 
+    while (i < pos && tabela[i].chave <= chaveBusca) 
         i++;
     // Caso a chave desejada seja menor que a 1 chave, o item nao existe no arquivo
     if (i == 0) 
@@ -63,14 +64,20 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item) {
         fseek (arq, desloc, SEEK_SET);
         fread (&pagina, sizeof(TipoItem), quantitens, arq);
         // Pesquisa sequencial na pagina lida
-        i = pesquisaBinaria(pagina, 0, quantitens-1, item->chave);
+        i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca);
         
-        if(i>=0) {
+        if(i >= 0) {
             *item = pagina[i];
+            printf("Item encontrado: Chave: %d\n", item->chave);
+            fclose (arq);
             return 1;
         }
-        else
+        else {
+            printf("Item nao encontrado.\n");
+            fclose (arq);
             return 0;
+        }
+            
     }
-    fclose (arq);
+    
 } 

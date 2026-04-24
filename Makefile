@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -Iinclude -g -std=c11
 
 SRC = $(wildcard src/*.c)
 OBJ = $(SRC:src/%.c=build/%.o)
-TARGET = main
+TARGET = pesquisa
 
 all: $(TARGET)
 
