@@ -1,36 +1,44 @@
 #include <stdio.h>
 #include "ABB.h"
 #include "Struct.h"
-void insereFilhos(FILE *arq, int chave, int pos, int paiAtual){
-    fseek(arq, paiAtual * sizeof(ItemABB), SEEK_SET);
-    ItemABB pesq;
-    fread(&pesq, sizeof(ItemABB), 1, arq);
-    if (chave < pesq.item.chave) {
-        if (pesq.esq == -1) {
-            pesq.esq = pos;
-            fseek(arq, paiAtual * sizeof(ItemABB), SEEK_CUR);
-            fwrite(&pesq, sizeof(ItemABB), 1, arq);
-            return;
+
+void insereFilhos(FILE *arq, int chave, int pos, int idx) {
+    ItemABB atual;
+    int indiceAtual = idx;
+    while (1) {
+        // move o ponteiro do  arquivo para a leitura
+        fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
+        if (fread(&atual, sizeof(ItemABB), 1, arq) != 1) {
+            return; // Erro de leitura
         }
-        else 
-            insereFilhos(arq, chave, pos, pesq.esq);
-    }
-    else {
-        if (pesq.dir == -1) {
-            pesq.dir = pos;// usar o ftell, subtrair pelo sizeof, e voltar com SEEK_set 
-            //int pArq = ftell(arq) - sizeof(ItemABB);
-            ////fseek(arq, pArq*sizeof(ItemABB, SEEK_SET));
-            fseek(arq, paiAtual * sizeof(ItemABB), SEEK_CUR);
-            fwrite(&pesq, sizeof(ItemABB), 1, arq);
-            return;
+        // Verifica se vai para a esquerda ou direita
+        if (chave < atual.item.chave) {
+            // se nao tiver filhos e so inserir
+            if (atual.esq == -1) {
+                atual.esq = pos;
+                fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
+                fwrite(&atual, sizeof(ItemABB), 1, arq);
+                return; 
+            } else // se tiver filhos atualiza o endereco
+                indiceAtual = atual.esq;
+        } 
+        else {
+            // se nao tiver filhos e so inserir
+            if (atual.dir == -1) {
+                atual.dir = pos;
+                fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
+                fwrite(&atual, sizeof(ItemABB), 1, arq);
+                return;
+            } else {
+                // se tiver filhos atualiza o endereco
+                indiceAtual = atual.dir;
+            }
         }
-        else 
-            insereFilhos(arq, chave, pos, pesq.dir); 
     }
 }
-// PRoblema está aqui !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 void criaArquivoABB(int situacao) {
-    FILE *arq = fopen("abb.bin", "wb");
+    FILE *arq = fopen("abb.bin", "w+b");
     FILE *arqRef;
     if (situacao == 1) arqRef = fopen("arqAscendente.bin", "rb");
     else if (situacao == 2) arqRef = fopen("arqDescendente.bin", "rb");
@@ -40,17 +48,18 @@ void criaArquivoABB(int situacao) {
         return;
     }
     ItemABB temp;
+    int pos = 0;
+    // Lê da referencia
     while(fread(&temp.item, sizeof(TipoItem), 1, arqRef) == 1){
         temp.esq = temp.dir = -1;
         
         // Colocar no final do abb.bin
         fseek(arq, 0, SEEK_END);
-        int pos = ftell(arq) / sizeof(ItemABB);
         fwrite(&temp, sizeof(ItemABB), 1, arq);
         
-        fseek(arq, 0, SEEK_SET);
-        if(pos > 1)
+        if(pos > 0)
             insereFilhos(arq, temp.item.chave, pos, 0);
+        pos++;
     }
 
     fclose(arq);
@@ -59,20 +68,25 @@ void criaArquivoABB(int situacao) {
 
 int pesquisaABB(int chave, int situacao) {
     criaArquivoABB(situacao);
+
     FILE *arq = fopen("abb.bin", "rb");
     if (!arq)
-       return -1;
-    
+    {
+        printf("Erro ao abrir o arquivo!\n");
+        return -1;
+    }
     ItemABB pesq;
     int pos = 0;
     
     while (1) {
         fseek(arq, pos * sizeof(ItemABB), SEEK_SET);
-        
+
         if (fread(&pesq, sizeof(ItemABB), 1, arq) != 1)
+        {
+            fclose(arq);
             break;
-        
-        
+        }
+
         if (chave < pesq.item.chave) {
             if (pesq.esq == -1) break;
             pos = pesq.esq;

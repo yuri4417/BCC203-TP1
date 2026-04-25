@@ -57,7 +57,7 @@ void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){
 
         fseek(arqRef, posTroca * sizeof(TipoItem), SEEK_SET);
         fwrite(&item1, sizeof(TipoItem), 1, arqRef);
-        if(printFlag)// caso passar o -P vai imprimir todas as chaves e dados
+        if(printFlag)
             printf("Chave: %d, Dado1: %ld, Dado2: %s, Dado3: %s\n", item2.chave, item2.dado1, item2.dado2, item2.dado3);
     }
 }

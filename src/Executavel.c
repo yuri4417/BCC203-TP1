@@ -19,8 +19,8 @@ int valida(int argc, char *argv[], Config *cfg){
     }
 
     cfg->quantidade = atoi(argv[2]);
-    if(cfg->quantidade <= 0 || cfg->quantidade >250000){
-        printf("Quantidade de itens deve ser maior que zero e menor que 1000000.\n");
+    if(cfg->quantidade <= 0){
+        printf("Digite uma quantidade válida.\n");
         return 0;
     }
 
@@ -53,7 +53,7 @@ int valida(int argc, char *argv[], Config *cfg){
 }
 
 void executar(Config *cfg){
-    TipoIndice tabela[MAXPAGINA];
+    TipoIndice *tabela = malloc(sizeof(TipoIndice) * MAXPAGINA);
     TipoItem x; 
 
     criaArquivo(cfg->quantidade, cfg->situacao, cfg->imprimir);
@@ -78,5 +78,5 @@ void executar(Config *cfg){
             }
             break;
     }
-    
+    free(tabela);
 }
