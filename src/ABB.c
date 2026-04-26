@@ -2,9 +2,9 @@
 #include "ABB.h"
 #include "Struct.h"
 
-void insereFilhos(FILE *arq, int chave, int pos, int idx) {
+void insereFilhos(FILE *arq, int chave, int pos) {
     ItemABB atual;
-    int indiceAtual = idx;
+    int indiceAtual = 0;
     while (1) {
         // move o ponteiro do  arquivo para a leitura
         fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
@@ -58,7 +58,7 @@ void criaArquivoABB(int situacao) {
         fwrite(&temp, sizeof(ItemABB), 1, arq);
         
         if(pos > 0)
-            insereFilhos(arq, temp.item.chave, pos, 0);
+            insereFilhos(arq, temp.item.chave, pos);
         pos++;
     }
 
