@@ -2,15 +2,15 @@
 #include "ABB.h"
 #include "Struct.h"
 
-void insereFilhos(FILE *arq, int chave, int pos, int idx) {
+void insereFilhos(FILE *arq, int chave, int pos) {
     ItemABB atual;
-    int indiceAtual = idx;
+    int indiceAtual = 0;
     while (1) {
         // move o ponteiro do  arquivo para a leitura
         fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
         if (fread(&atual, sizeof(ItemABB), 1, arq) != 1) {
             return; // Erro de leitura
-        }
+        }   
         // Verifica se vai para a esquerda ou direita
         if (chave < atual.item.chave) {
             // se nao tiver filhos e so inserir
@@ -43,11 +43,16 @@ void criaArquivoABB(int situacao) {
     if (situacao == 1) arqRef = fopen("arqAscendente.bin", "rb");
     else if (situacao == 2) arqRef = fopen("arqDescendente.bin", "rb");
     else arqRef = fopen("arqAleatorio.bin","rb");
-    if (!arq || !arqRef){
-        printf("Erro na abertura do arquivo!\n");
+    if(!arq || !arqRef) {
+        if(arq)
+            fclose(arq);
+        else
+            fclose(arqRef);
+        printf("Erro de memória\n");
         return;
     }
-    ItemABB temp;
+    
+    ItemABB temp = {0};
     int pos = 0;
     // Lê da referencia
     while(fread(&temp.item, sizeof(TipoItem), 1, arqRef) == 1){
@@ -58,7 +63,7 @@ void criaArquivoABB(int situacao) {
         fwrite(&temp, sizeof(ItemABB), 1, arq);
         
         if(pos > 0)
-            insereFilhos(arq, temp.item.chave, pos, 0);
+            insereFilhos(arq, temp.item.chave, pos);
         pos++;
     }
 
@@ -79,14 +84,15 @@ int pesquisaABB(int chave, int situacao) {
     int pos = 0;
     
     while (1) {
+
         fseek(arq, pos * sizeof(ItemABB), SEEK_SET);
 
         if (fread(&pesq, sizeof(ItemABB), 1, arq) != 1)
-        {
+        {           
             fclose(arq);
             break;
         }
-
+        
         if (chave < pesq.item.chave) {
             if (pesq.esq == -1) break;
             pos = pesq.esq;
@@ -105,3 +111,12 @@ int pesquisaABB(int chave, int situacao) {
     fclose(arq);
     return -1;
 }
+
+
+// PAGINACAO
+// ARQUIVO REF (ASC, DESC, RAND) -> ARQUIVO PAGINADO
+// PROCESSO
+// Pega um item do arquivo original
+// Insere em uma pagina
+// todos os nos filhos devem ficar na mesma pagina de um no 
+// Pagina cheia -> Cria nova pagina 67

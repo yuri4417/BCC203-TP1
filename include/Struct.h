@@ -1,7 +1,7 @@
 #ifndef STRUCT_H
 #define STRUCT_H
-#define ITENSPAGINA 4
-#define MAXPAGINA 250000
+#define ITENSPAGINA 50
+#define MAXPAGINA 20000
 
 // #define arq "arq.bin"
 typedef struct {
@@ -30,5 +30,18 @@ typedef struct {
     TipoItem item;
     int dir;
 } ItemABB;
+/*
+typedef long TipoChave;
+typedef struct TipoRegistro {
+    TipoChave Chave;
+    //outros componentes
+} TipoRegistro;
+
+typedef struct TipoPagina* TipoApontador;
+typedef struct TipoPagina {
+    short n;
+    TipoRegistro r[MM];
+    TipoApontador p[MM + 1];
+} TipoPagina;*/
 
 #endif // STRUCT_H

@@ -2,8 +2,15 @@
 #include <time.h>
 #include "AcessoIdx.h"
 
+int comparaCrescente(int valor, int chave) {
+    return valor < chave;
+}
 
-int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave) {
+int comparaDecrescente(int valor, int chave) {
+    return valor > chave;
+}
+
+int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave, int (*compara)(int, int)) {
     if (esq > dir)
         return -1;
 
@@ -12,27 +19,27 @@ int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave) {
     if (v[m].chave == chave)
         return m;
 
-    else if (v[m].chave < chave)
-        return pesquisaBinaria(v, m + 1, dir, chave);
+    if (compara(v[m].chave, chave)) {
+        return pesquisaBinaria(v, m + 1, dir, chave,compara);
+    }
     else
-        return pesquisaBinaria(v, esq, m - 1, chave);
+        return pesquisaBinaria(v, esq, m - 1, chave,compara);
+
 }
 
 
-int acessoIndexado(TipoIndice tabela[], TipoItem* item) {
+int acessoIndexado(TipoIndice tabela[], TipoItem* item, int situacao) {
     TipoItem pagina[ITENSPAGINA];
     int i, quantitens;
     long desloc;
-    // Procura pela pagina onde o item pode se encontrar
     i = 0; 
-
-    FILE *arq; 
-    if(!(arq = fopen("arqAscendente.bin", "rb"))) {
+    FILE *arq = (situacao == 1) ? fopen("arqAscendente.bin", "rb") : fopen("arqDescendente.bin", "rb");
+    
+    if (!arq) {
         printf("Erro ao abrir o arquivo.\n");
         return -1;
     }
 
-    // Leitura das primeiras posições de cada pagina
     int pos = 0;
     int chaveBusca = item->chave;
     TipoItem temp;
@@ -40,31 +47,39 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item) {
         tabela[pos].chave = temp.chave;
         tabela[pos].posicao = pos+1;
         pos++;
-        fseek(arq, sizeof(TipoItem) * 3, SEEK_CUR);
+        fseek(arq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
     }
+    
+    int crescente = (tabela[0].chave < tabela[1].chave);// 1 para crescente, 0 para decrescente
+    if(crescente)
+        while (i < pos && tabela[i].chave <= chaveBusca) i++; // <= para crescente, >= para decrescente,
+    else
+        while (i < pos && tabela[i].chave >= chaveBusca) i++;
 
-    while (i < pos && tabela[i].chave <= chaveBusca) 
-        i++;
-    // Caso a chave desejada seja menor que a 1 chave, o item nao existe no arquivo
-    if (i == 0) 
+    if (i == 0){
+        fclose(arq);
         return 0;
+    }
+        
     else {
-        // A ultima pagina pode nao estar completa
         if (i < pos)
             quantitens = ITENSPAGINA;
         else {
             fseek (arq, 0, SEEK_END);
             quantitens = (ftell(arq)/sizeof(TipoItem))%ITENSPAGINA;
             if (!quantitens) 
-                quantitens = ITENSPAGINA; // caso o modulo for igual a ele nao iria rodar o loop, entao atualizar o valor 
+                quantitens = ITENSPAGINA;  
         }
-        // Le a pagina desejada do arquivo
         desloc = (tabela[i-1].posicao-1)*ITENSPAGINA*sizeof(TipoItem);
 
         fseek (arq, desloc, SEEK_SET);
         fread (&pagina, sizeof(TipoItem), quantitens, arq);
-        // Pesquisa sequencial na pagina lida
-        i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca);
+
+        
+        if(crescente)
+            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaCrescente);
+        else
+            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaDecrescente);
         
         if(i >= 0) {
             *item = pagina[i];

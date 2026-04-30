@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "Executavel.h"
 #include "AcessoIdx.h"
 #include "ABB.h"
@@ -30,7 +31,7 @@ int valida(int argc, char *argv[], Config *cfg){
         return 0;
     }
     
-    if (cfg->metodo == 1 && cfg->situacao != 1) {
+    if (cfg->metodo == 1 && cfg->situacao == 3) {
         printf("Acesso Indexado necessita do arquivo ordenado para realizar a busca.\n");
         return 0;
     }
@@ -53,14 +54,14 @@ int valida(int argc, char *argv[], Config *cfg){
 }
 
 void executar(Config *cfg){
-    TipoIndice *tabela = malloc(sizeof(TipoIndice) * MAXPAGINA);
+    TipoIndice *tabela = malloc(sizeof(TipoIndice)*(ceil(cfg->quantidade/ITENSPAGINA)));
     TipoItem x; 
 
     criaArquivo(cfg->quantidade, cfg->situacao, cfg->imprimir);
     x.chave = cfg->chave;
     switch (cfg->metodo) {
         case 1:
-            acessoIndexado(tabela, &x);
+            acessoIndexado(tabela, &x,cfg->situacao);
             break;
         case 2:
             pesquisaABB(x.chave, cfg->situacao);
