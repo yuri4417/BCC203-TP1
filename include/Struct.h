@@ -30,18 +30,15 @@ typedef struct {
     TipoItem item;
     int dir;
 } ItemABB;
-/*
-typedef long TipoChave;
-typedef struct TipoRegistro {
-    TipoChave Chave;
-    //outros componentes
-} TipoRegistro;
+typedef TipoItem TipoRegistro;
 
 typedef struct TipoPagina* TipoApontador;
+
 typedef struct TipoPagina {
     short n;
     TipoRegistro r[MM];
     TipoApontador p[MM + 1];
-} TipoPagina;*/
+} TipoPagina;
+
 
 #endif // STRUCT_H

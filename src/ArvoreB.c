@@ -11,13 +11,13 @@ void Pesquisa(TipoRegistro *x, TipoApontador Ap){
         printf("Registro nao encontrado\n");
         return;
     } 
-    while (i < Ap->n && x->Chave > Ap->r[i-1].Chave) i++;
-    if(x->Chave == Ap->r[i-1].Chave) {
+    while (i < Ap->n && x->chave > Ap->r[i-1].chave) i++;
+    if(x->chave == Ap->r[i-1].chave) {
         *x = Ap->r[i-1];
         printf("Registro encontrado\n");
         return;
     }
-    if (x->Chave < Ap->r[i-1].Chave) 
+    if (x->chave < Ap->r[i-1].chave) 
         Pesquisa(x, Ap->p[i-1]);
     else Pesquisa(x, Ap->p[i]);
 }
@@ -28,25 +28,24 @@ void Imprime(TipoApontador arvore){
     while (i <= arvore->n) {
         Imprime(arvore->p[i]);
     if (i != arvore->n)
-        printf("%d",arvore->r[i].Chave);
+        printf("%d",arvore->r[i].chave);
     i++;
     }
 }
 
 void InsereNaPagina(TipoApontador Ap, TipoRegistro Reg, TipoApontador ApDir){
-    short NaoAchouPosicao;
+    
     int k;
     k = Ap->n;
-    NaoAchouPosicao = (k > 0);
-    while (NaoAchouPosicao) {
-        if (Reg.Chave >= Ap->r[k-1].Chave) {
-            NaoAchouPosicao = 0;
+    
+    while (k>0) {
+        if (Reg.chave >= Ap->r[k-1].chave) 
             break;
-        }
+        
         Ap->r[k] = Ap->r[k-1];
         Ap->p[k+1] = Ap->p[k];
         k--;
-        if (k < 1) NaoAchouPosicao = 0;
+        
     }
     Ap->r[k] = Reg;
     Ap->p[k+1] = ApDir;
@@ -62,13 +61,13 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, short *Cresceu, TipoRegistro *RegRe
         (*ApRetorno) = NULL;
         return;
     }
-    while (i < Ap->n && Reg.Chave > Ap->r[i-1].Chave) i++;
-    if (Reg.Chave == Ap->r[i-1].Chave) {
+    while (i < Ap->n && Reg.chave > Ap->r[i-1].chave) i++;
+    if (Reg.chave == Ap->r[i-1].chave) {
         printf("Erro: Registro ja existente\n");
         *Cresceu = 0;
         return;
     }
-    if (Reg.Chave < Ap->r[i-1].Chave) i--;
+    if (Reg.chave < Ap->r[i-1].chave) i--;
     Ins(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno);
     if (!*Cresceu) return;
     if (Ap->n < MM) {
@@ -95,7 +94,7 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, short *Cresceu, TipoRegistro *RegRe
 void Insere(TipoRegistro Reg, TipoApontador *Ap){
     short Cresceu;
     TipoRegistro RegRetorno;
-    TipoApontador *ApRetorno, *ApTemp;
+    TipoApontador ApRetorno, ApTemp;
     Ins(Reg, *Ap, &Cresceu, &RegRetorno, &ApRetorno);
     if (Cresceu) {
         ApTemp = (TipoPagina *) malloc(sizeof(TipoPagina));

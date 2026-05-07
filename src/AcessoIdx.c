@@ -42,7 +42,7 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item, int situacao) {
 
     int pos = 0;
     int chaveBusca = item->chave;
-    TipoItem temp;
+    TipoItem temp;  //le quantidade de paginas que tem
     while (fread(&temp, sizeof(TipoItem), 1, arq) == 1) { 
         tabela[pos].chave = temp.chave;
         tabela[pos].posicao = pos+1;
@@ -57,13 +57,13 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item, int situacao) {
         while (i < pos && tabela[i].chave >= chaveBusca) i++;
 
     if (i == 0){
-        fclose(arq);
-        return 0;
+        fclose(arq);     
+        return 0;      //verifica se tem alguma pagina
     }
-        
+    
     else {
-        if (i < pos)
-            quantitens = ITENSPAGINA;
+        if (i < pos)       
+            quantitens = ITENSPAGINA;      //ve se a pagina ta completa
         else {
             fseek (arq, 0, SEEK_END);
             quantitens = (ftell(arq)/sizeof(TipoItem))%ITENSPAGINA;
