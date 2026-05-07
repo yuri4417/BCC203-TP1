@@ -56,7 +56,6 @@ int valida(int argc, char *argv[], Config *cfg){
 void executar(Config *cfg){
     TipoIndice *tabela = malloc(sizeof(TipoIndice)*(ceil(cfg->quantidade/ITENSPAGINA)));
     TipoItem x; 
-
     criaArquivo(cfg->quantidade, cfg->situacao, cfg->imprimir);
     x.chave = cfg->chave;
     switch (cfg->metodo) {
@@ -67,16 +66,9 @@ void executar(Config *cfg){
             pesquisaABB(x.chave, cfg->situacao);
             break;
         case 3:
-            printf("Arvore B\n");
-            if(cfg->imprimir){
-                return; //Completar com a impressao
-            }
+            arvoreB(x.chave, cfg->situacao);
             break;
         case 4:
-            printf("Arvore B Estrela\n");
-            if(cfg->imprimir){
-                return; //Completar com a impressao
-            }
             break;
     }
     free(tabela);

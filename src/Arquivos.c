@@ -1,4 +1,4 @@
-#include <stdio.h>
+    #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Arquivos.h"
@@ -20,7 +20,7 @@ void geraAscendente(int qtdTotal, FILE* arq, int printFlag) {
         geraString(temp->dado2, 1000);
         geraString(temp->dado3, 5000);
         if (printFlag)
-            printf("Chave: %d, Dado1: %ld\n", temp->chave, temp->dado1);    
+            printf(" Chave: %d ", temp->chave);    
         fwrite(temp, sizeof(TipoItem), 1, arq);
     }
     free(temp);
@@ -35,7 +35,7 @@ void geraDescendente (int qtdTotal, FILE *arqDesc, int printFlag){
         geraString(temp->dado2, 1000);
         geraString(temp->dado3, 5000);
         if (printFlag)
-            printf("Chave: %d, Dado1: %ld\n", temp->chave, temp->dado1);
+            printf(" Chave: %d", temp->chave);
         
         fwrite(temp, sizeof(TipoItem), 1, arqDesc);
     }
@@ -44,8 +44,8 @@ void geraDescendente (int qtdTotal, FILE *arqDesc, int printFlag){
 }
 
 void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){ 
-    TipoItem *item1 = calloc(1, sizeof(TipoItem));
-    TipoItem *item2 = calloc(1, sizeof(TipoItem));
+    TipoItem item1 = {0};
+    TipoItem item2 = {0};
     int posTroca;
     for (int i = 0; i < qtdTotal; i++) {
         posTroca = i + rand() % (qtdTotal - i);
@@ -62,10 +62,9 @@ void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){
         fseek(arqRef, posTroca * sizeof(TipoItem), SEEK_SET);
         fwrite(&item1, sizeof(TipoItem), 1, arqRef);
         if(printFlag)
-            printf("Chave: %d, Dado1: %ld\n", item2->chave, item2->dado1);
+            printf(" Chave: %d ", item2.chave);
     }
-    free(item1);
-    free(item2);
+    printf("\n");
 }
 
 void criaArquivo(int qtdTotal, int situacao, int printFlag) {
@@ -85,8 +84,8 @@ void criaArquivo(int qtdTotal, int situacao, int printFlag) {
             break;
         case 3:
         //gera o arquivo aletorio
-            geraAscendente(qtdTotal, arqRef, printFlag);
-            geraRandom (qtdTotal, arqRef, printFlag);
+            geraAscendente(qtdTotal, arqRef, 0);
+            geraRandom(qtdTotal, arqRef, printFlag);
             break;
     }
     fclose(arqRef);
