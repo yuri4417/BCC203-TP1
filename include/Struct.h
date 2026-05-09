@@ -3,7 +3,7 @@
 #define ITENSPAGINA 50
 #define MAXPAGINA 20000
 #define M 10
-
+#define QTD_TESTES 10
 typedef struct {
     int metodo;
     int quantidade;
@@ -17,11 +17,18 @@ typedef struct{
     int posicao;
 }TipoIndice;
 
+typedef struct {
+    long comp;
+    long transf;
+    double tempoExec;
+}Bench;
+
 typedef struct{
     int chave;
     long int dado1;
     char dado2[1001];
     char dado3[5001];
+
 }TipoItem;
 
 typedef struct {

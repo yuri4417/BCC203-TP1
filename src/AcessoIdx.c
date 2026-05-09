@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "AcessoIdx.h"
+#include "Executavel.h"
 
 int comparaCrescente(int valor, int chave) {
     return valor < chave;
@@ -10,25 +11,25 @@ int comparaDecrescente(int valor, int chave) {
     return valor > chave;
 }
 
-int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave, int (*compara)(int, int)) {
+int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave, int (*compara)(int, int), Bench *bench) {
     if (esq > dir)
         return -1;
 
     int m = (esq + dir) / 2;
-
+    bench->comp++;
     if (v[m].chave == chave)
         return m;
-
+    bench->comp++;
     if (compara(v[m].chave, chave)) {
-        return pesquisaBinaria(v, m + 1, dir, chave,compara);
+        return pesquisaBinaria(v, m + 1, dir, chave,compara, bench);
     }
     else
-        return pesquisaBinaria(v, esq, m - 1, chave,compara);
+        return pesquisaBinaria(v, esq, m - 1, chave,compara, bench);
 
 }
 
 
-int acessoIndexado(TipoIndice tabela[], TipoItem* item, int situacao) {
+int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *bench) {
     TipoItem pagina[ITENSPAGINA];
     int i, quantitens;
     long desloc;
@@ -44,18 +45,29 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item, int situacao) {
     int chaveBusca = item->chave;
     TipoItem temp;
     while (fread(&temp, sizeof(TipoItem), 1, arq) == 1) { 
+        bench->transf++;
         tabela[pos].chave = temp.chave;
         tabela[pos].posicao = pos+1;
         pos++;
         fseek(arq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
     }
+    bench->transf++;
     
     int crescente = (tabela[0].chave < tabela[1].chave);// 1 para crescente, 0 para decrescente
-    if(crescente)
-        while (i < pos && tabela[i].chave <= chaveBusca) i++; // <= para crescente, >= para decrescente,
-    else
-        while (i < pos && tabela[i].chave >= chaveBusca) i++;
-
+    bench->comp++;
+    if(crescente){
+        while (i < pos && tabela[i].chave <= chaveBusca){
+            i++;
+            bench->comp++;
+        } // <= para crescente, >= para decrescente,
+        
+    }
+    else{
+        while (i < pos && tabela[i].chave >= chaveBusca){
+            i++;
+            bench->comp++;
+        }
+    }
     if (i == 0){
         fclose(arq);
         return 0;
@@ -74,16 +86,16 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item, int situacao) {
 
         fseek (arq, desloc, SEEK_SET);
         fread (&pagina, sizeof(TipoItem), quantitens, arq);
-
+        bench->transf++;
         
         if(crescente)
-            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaCrescente);
+            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaCrescente, bench);
         else
-            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaDecrescente);
+            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaDecrescente, bench);
         
         if(i >= 0) {
             *item = pagina[i];
-            printf("Item encontrado: Chave: %d\n", item->chave);
+            printItem(item);
             fclose (arq);
             return 1;
         }
@@ -91,8 +103,6 @@ int acessoIndexado(TipoIndice tabela[], TipoItem* item, int situacao) {
             printf("Item nao encontrado.\n");
             fclose (arq);
             return 0;
-        }
-            
+        }       
     }
-    
 } 
