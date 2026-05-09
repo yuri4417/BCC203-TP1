@@ -1,5 +1,6 @@
-#include <stdio.h>
+    #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "Arquivos.h"
 #include "Struct.h"
 
@@ -12,36 +13,39 @@ void geraString(char *string, int tamString) { // preenche a string de maneira a
 }
 
 void geraAscendente(int qtdTotal, FILE* arq, int printFlag) {
-    TipoItem temp;
+    TipoItem *temp = calloc(1, sizeof(TipoItem));
     for (int i = 0; i < qtdTotal; i++) {
-        temp.chave = (i+1);
-        temp.dado1 = rand();
-        geraString(temp.dado2, 1000);
-        geraString(temp.dado3, 5000);
+        temp->chave = (i+1);
+        temp->dado1 = rand();
+        geraString(temp->dado2, 1000);
+        geraString(temp->dado3, 5000);
         if (printFlag)
-            printf("Chave: %d, Dado1: %ld, Dado2: %s, Dado3: %s\n\n", temp.chave, temp.dado1, temp.dado2, temp.dado3);    
-        fwrite(&temp, sizeof(TipoItem), 1, arq);
+            printf(" Chave: %d ", temp->chave);    
+        fwrite(temp, sizeof(TipoItem), 1, arq);
     }
+    free(temp);
 }
 
 void geraDescendente (int qtdTotal, FILE *arqDesc, int printFlag){
     
-    TipoItem temp;
+    TipoItem *temp = calloc(1, sizeof(TipoItem));
     for (int i = qtdTotal; i > 0; i--) {
-        temp.chave = i;
-        temp.dado1 = rand();
-        geraString(temp.dado2, 1000);
-        geraString(temp.dado3, 5000);
+        temp->chave = i;
+        temp->dado1 = rand();
+        geraString(temp->dado2, 1000);
+        geraString(temp->dado3, 5000);
         if (printFlag)
-            printf("Chave: %d, Dado1: %ld, Dado2: %s, Dado3: %s\n", temp.chave, temp.dado1, temp.dado2, temp.dado3);
+            printf(" Chave: %d", temp->chave);
         
-        fwrite(&temp, sizeof(TipoItem), 1, arqDesc);
+        fwrite(temp, sizeof(TipoItem), 1, arqDesc);
     }
     fclose(arqDesc);
+    free(temp);
 }
 
-void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){
-    TipoItem item1, item2;
+void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){ 
+    TipoItem item1 = {0};
+    TipoItem item2 = {0};
     int posTroca;
     for (int i = 0; i < qtdTotal; i++) {
         posTroca = i + rand() % (qtdTotal - i);
@@ -58,8 +62,9 @@ void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){
         fseek(arqRef, posTroca * sizeof(TipoItem), SEEK_SET);
         fwrite(&item1, sizeof(TipoItem), 1, arqRef);
         if(printFlag)
-            printf("Chave: %d, Dado1: %ld, Dado2: %s, Dado3: %s\n", item2.chave, item2.dado1, item2.dado2, item2.dado3);
+            printf(" Chave: %d ", item2.chave);
     }
+    printf("\n");
 }
 
 void criaArquivo(int qtdTotal, int situacao, int printFlag) {
@@ -79,8 +84,8 @@ void criaArquivo(int qtdTotal, int situacao, int printFlag) {
             break;
         case 3:
         //gera o arquivo aletorio
-            geraAscendente(qtdTotal, arqRef, printFlag);
-            geraRandom (qtdTotal, arqRef, printFlag);
+            geraAscendente(qtdTotal, arqRef, 0);
+            geraRandom(qtdTotal, arqRef, printFlag);
             break;
     }
     fclose(arqRef);
