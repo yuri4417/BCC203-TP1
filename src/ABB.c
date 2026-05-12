@@ -32,7 +32,7 @@ void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
                 atual.dir = pos;
                 fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
                 fwrite(&atual, sizeof(ItemABB), 1, arq);
-                bench->transf++;
+                // bench->transf++;
                 return;
             } else {
                 // se tiver filhos atualiza o endereco
