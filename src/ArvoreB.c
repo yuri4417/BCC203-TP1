@@ -5,6 +5,7 @@
 #include "Executavel.h"
 #include "ArvoreB.h"
 #include "Struct.h"
+#include "Arquivos.h"
 
 void LiberaArvore(TipoApontador arvore) {
     if (arvore == NULL)
@@ -140,23 +141,18 @@ void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench) {
     }   
 }
 
-void arvoreB(int chave, int situacao, Bench *bench) {
+void arvoreB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
     TipoApontador pArvore = NULL;
-    FILE* pArq = NULL;
-    if (situacao == 1)
-        pArq = fopen("arqAscendente.bin", "rb");
-    else if (situacao == 2)
-        pArq = fopen("arqDescendente.bin", "rb");
-    else  
-        pArq = fopen("arqAleatorio.bin", "rb");
+    FILE* pArq = criaArquivos(situacao, printFlag);
     if (!pArq) {
         printf("Erro ao abrir o arquivo\n");
         return;
     }
     
     TipoRegistro temp = {0};
-    
-    while (fread(&temp, sizeof(TipoRegistro), 1, pArq) == 1){
+    int i = 0;
+    while (i < tam) {
+        fread(&temp, sizeof(TipoRegistro), 1, pArq);
         Insere(temp, &pArvore, bench);
         bench->transf++;
     }

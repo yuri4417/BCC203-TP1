@@ -11,7 +11,6 @@
 #include "ABB.h"
 #include "ArvoreB.h"
 #include "ArvoreBEstrela.h"
-#include "Arquivos.h"
 #include "Struct.h"
 
 #ifdef _WIN32
@@ -88,11 +87,7 @@ void executar(Config *cfg, int flagTeste) {
     TipoIndice *tabela = malloc(sizeof(TipoIndice)*(ceil(cfg->quantidade/ITENSPAGINA)));
     TipoItem x; 
     Bench bench;
-    Timer timer;
-
-    if (!flagTeste)
-        criaArquivo(cfg->quantidade, cfg->situacao, cfg->imprimir);
-        
+    Timer timer;    
     x.chave = cfg->chave;
     bench.comp = 0;
     bench.transf= 0;
@@ -119,8 +114,8 @@ void executar(Config *cfg, int flagTeste) {
 void rodarTestes(Config *cfg) {
     // TODO: Fazer bateria de 10 testes automaticamente
     // OBS:
-    // Nao criar arquivo toda vez 
-    // Chaves diferentes e bem distintas, maravilha!
+    // Nao criar arquivo toda vez ❌❌❌❌
+    // Chaves diferentes e bem distintas, maravilha! 
     //Para cada quantidade de elementos 👌👌👌
 
     //executar(cfg, 1);

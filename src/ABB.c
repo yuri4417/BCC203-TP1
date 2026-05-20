@@ -2,7 +2,7 @@
 #include "ABB.h"
 #include "Struct.h"
 #include "Executavel.h"
-
+#include "Arquivos.h"
 void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
     ItemABB atual;
     int indiceAtual = 0;
@@ -21,7 +21,6 @@ void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
                 atual.esq = pos;
                 fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
                 fwrite(&atual, sizeof(ItemABB), 1, arq);
-                bench->transf++;
                 return; 
             } else // se tiver filhos atualiza o endereco
                 indiceAtual = atual.esq;
@@ -32,7 +31,6 @@ void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
                 atual.dir = pos;
                 fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
                 fwrite(&atual, sizeof(ItemABB), 1, arq);
-                // bench->transf++;
                 return;
             } else {
                 // se tiver filhos atualiza o endereco
@@ -42,17 +40,15 @@ void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
     }
 }
 
-void criaArquivoABB(int situacao, Bench *bench) {
+void criaArquivoABB(int situacao, Bench *bench, int printFlag, int tam) {
     FILE *arq = fopen("abb.bin", "w+b");
-    FILE *arqRef;
-    if (situacao == 1) arqRef = fopen("arqAscendente.bin", "rb");
-    else if (situacao == 2) arqRef = fopen("arqDescendente.bin", "rb");
-    else arqRef = fopen("arqAleatorio.bin","rb");
-    if(!arq || !arqRef) {
+    FILE *pArqRef = criaArquivos(situacao, printFlag);
+    
+    if(!arq || !pArqRef) {
         if(arq)
             fclose(arq);
         else
-            fclose(arqRef);
+            fclose(pArqRef);
         printf("Erro de memória\n");
         return;
     }
@@ -60,29 +56,28 @@ void criaArquivoABB(int situacao, Bench *bench) {
     ItemABB temp = {0};
     int pos = 0;
     // Lê da referencia
-    while(fread(&temp.item, sizeof(TipoItem), 1, arqRef) == 1){
+    while(pos < tam) {
+        fread(&temp.item, sizeof(TipoItem), 1, pArqRef);
         bench->transf++;
         temp.esq = temp.dir = -1;
         
         // Colocar no final do abb.bin
         fseek(arq, 0, SEEK_END);
         fwrite(&temp, sizeof(ItemABB), 1, arq);
-        bench->transf++;
         if(pos > 0)
             insereFilhos(arq, temp.item.chave, pos,bench);
         pos++;
     }
 
     fclose(arq);
-    fclose(arqRef);
+    fclose(pArqRef);
 }
 
-int pesquisaABB(int chave, int situacao,Bench *bench) {
-    criaArquivoABB(situacao,bench);
+int pesquisaABB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
+    criaArquivoABB(situacao, bench, printFlag, tam);
 
     FILE *arq = fopen("abb.bin", "rb");
-    if (!arq)
-    {
+    if (!arq) {
         printf("Erro ao abrir o arquivo!\n");
         return -1;
     }
@@ -93,8 +88,7 @@ int pesquisaABB(int chave, int situacao,Bench *bench) {
         fseek(arq, pos * sizeof(ItemABB), SEEK_SET);
 
         bench->transf++;
-        if (fread(&pesq, sizeof(ItemABB), 1, arq) != 1)
-        {           
+        if (fread(&pesq, sizeof(ItemABB), 1, arq) != 1) {           
             fclose(arq);
             break;
         }
@@ -104,16 +98,16 @@ int pesquisaABB(int chave, int situacao,Bench *bench) {
             if (pesq.esq == -1) break;
             pos = pesq.esq;
         }
-        else if (pesq.item.chave == chave) {
-            bench->comp++;
-            printItem(&pesq.item);
-            fclose(arq);
-            return 1;
-        }
         else if (chave > pesq.item.chave) {
             bench->comp++;
             if (pesq.dir == -1) break;
             pos = pesq.dir;
+        }
+        else {
+            bench->comp++;
+            printItem(&pesq.item);
+            fclose(arq);
+            return 1;
         }
     }
     printf("Item nao encontrado.\n");

@@ -2,6 +2,7 @@
 #include <time.h>
 #include "AcessoIdx.h"
 #include "Executavel.h"
+#include "Arquivos.h"
 
 int comparaCrescente(int valor, int chave) {
     return valor < chave;
@@ -29,29 +30,29 @@ int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave, int (*compara)(int
 }
 
 
-int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *bench) {
+int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *bench, int tam, int printFlag) {
     TipoItem pagina[ITENSPAGINA];
     int i, quantitens;
     long desloc;
     i = 0; 
-    FILE *arq = (situacao == 1) ? fopen("arqAscendente.bin", "rb") : fopen("arqDescendente.bin", "rb");
+    FILE *pArq =  criaArquivos(situacao, printFlag);
     
-    if (!arq) {
-        printf("Erro ao abrir o arquivo.\n");
+    if (!pArq) {
+        printf("Erro ao abrir o pArquivo.\n");
         return -1;
     }
 
     int pos = 0;
     int chaveBusca = item->chave;
     TipoItem temp;
-    while (fread(&temp, sizeof(TipoItem), 1, arq) == 1) { 
+    while (pos < tam) { 
+        fread(&temp, sizeof(TipoItem), 1, pArq);
         bench->transf++;
         tabela[pos].chave = temp.chave;
         tabela[pos].posicao = pos+1;
         pos++;
-        fseek(arq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
+        fseek(pArq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
     }
-    bench->transf++;
     
     int crescente = (tabela[0].chave < tabela[1].chave);// 1 para crescente, 0 para decrescente
     bench->comp++;
@@ -69,7 +70,7 @@ int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *benc
         }
     }
     if (i == 0){
-        fclose(arq);
+        fclose(pArq);
         return 0;
     }
         
@@ -77,15 +78,15 @@ int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *benc
         if (i < pos)
             quantitens = ITENSPAGINA;
         else {
-            fseek (arq, 0, SEEK_END);
-            quantitens = (ftell(arq)/sizeof(TipoItem))%ITENSPAGINA;
+            fseek (pArq, 0, SEEK_END);
+            quantitens = (ftell(pArq)/sizeof(TipoItem))%ITENSPAGINA;
             if (!quantitens) 
                 quantitens = ITENSPAGINA;  
         }
         desloc = (tabela[i-1].posicao-1)*ITENSPAGINA*sizeof(TipoItem);
 
-        fseek (arq, desloc, SEEK_SET);
-        fread (&pagina, sizeof(TipoItem), quantitens, arq);
+        fseek (pArq, desloc, SEEK_SET);
+        fread (&pagina, sizeof(TipoItem), quantitens, pArq);
         bench->transf++;
         
         if(crescente)
@@ -96,12 +97,12 @@ int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *benc
         if(i >= 0) {
             *item = pagina[i];
             printItem(item);
-            fclose (arq);
+            fclose (pArq);
             return 1;
         }
         else {
             printf("Item nao encontrado.\n");
-            fclose (arq);
+            fclose (pArq);
             return 0;
         }       
     }

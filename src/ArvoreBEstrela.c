@@ -6,7 +6,7 @@
 #include "Executavel.h"
 #include "ArvoreBEstrela.h"
 #include "Struct.h"
-
+#include "Arquivos.h"
 void LiberaArvore(TipoApontadorEstrela arvore) {
     if (arvore == NULL)
         return;
@@ -22,8 +22,7 @@ void Pesquisa(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
     TipoApontadorEstrela Pag;
     Pag = Ap;
     
-    if (Ap->Pt == Interna)
-    {
+    if (Ap->Pt == Interna) {
         i = 1;
         while (i < Pag->UU.U0.ni && x->chave > Pag->UU.U0.ri[i - 1]){
             i++;
@@ -41,6 +40,7 @@ void Pesquisa(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
         i++;
         bench->comp++;
     }
+    
     bench->comp++;
     bench->comp++;
     if (x->chave == Pag->UU.U1.re[i - 1].chave){
@@ -101,29 +101,59 @@ void Ins(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro 
         return;
     }
            
+           
     if(Ap->Pt == Interna){
         while (i < Ap->UU.U0.ni && Reg.chave > Ap->UU.U0.ri[i-1]){
             i++;
             bench->comp++;
         } 
     }
-    
-    bench->comp++;
-    if (Reg.chave == Ap->UU.U0.ri[i-1]) {
-        printf("Erro: Registro ja existente\n");
-        *Cresceu = false;
-        return;
+    else {
+        while (i < Ap->UU.U1.ne && Reg.chave > Ap->UU.U1.re[i-1].chave){
+            i++;
+            bench->comp++;
+        }    
     }
+    if (Ap->Pt == Externa) {
+        bench->comp++;
+        if (Reg.chave == Ap->UU.U1.re[i-1].chave) {
+            printf("Erro: Registro ja existente\n");
+            *Cresceu = false;
+            return;
+        }
+        
+    }
+               
     bench->comp++;
-    if (Reg.chave < Ap->r[i-1].chave) i--;
-    Ins(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno, bench);
-
-
+    if (Ap->Pt == Interna) {
+        if (Reg.chave < Ap->UU.U0.ri[i-1]) i--;
+        Ins(Reg, Ap->UU.U0.pi[i], Cresceu, RegRetorno, ApRetorno, bench);
+    }
+    
     bench->comp++;
     if (!*Cresceu)  
         return;
+    if(Ap->UU.U1.ne < 2*M){
+        
+        InsereNaPagina(Ap, Ap->UU.U1.re[i] ,NULL  , bench);
+        *Cresceu = false;
+        return;
+    }
+    else{
+        ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
+        ApTemp->UU.U1.ne = 0;
+        if(i< M+1){
+            InsereNaPagina(ApTemp, Ap->UU.U1.re[2*M-1] ,NULL , bench);
+            Ap->UU.U1.ne--;
+            InsereNaPagina(Ap, Reg ,NULL , bench);
+        }
+    }
+
+    
+    /*
     bench->comp++;
-    if (Ap->n < 2*M) {
+    if (Ap->Pt == Externa)
+        (Ap-> < 2*M) {
         InsereNaPagina(Ap, *RegRetorno, *ApRetorno, bench);
         *Cresceu = false;
         return;
@@ -131,6 +161,7 @@ void Ins(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro 
     ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
     ApTemp->n = 0;
     ApTemp->p[0] = NULL;
+    */
     if (i < M + 1) {
         InsereNaPagina(ApTemp, Ap->r[2*M-1], Ap->p[2*M],bench);
         Ap->n--;
@@ -176,23 +207,18 @@ void Insere(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench) {
     }
 }
 
-void arvoreB(int chave, int situacao, Bench *bench) {
+void arvoreB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
     TipoApontadorEstrela pArvore = NULL;
-    FILE* pArq = NULL;
-    if (situacao == 1)
-        pArq = fopen("arqAscendente.bin", "rb");
-    else if (situacao == 2)
-        pArq = fopen("arqDescendente.bin", "rb");
-    else  
-        pArq = fopen("arqAleatorio.bin", "rb");
+    FILE* pArq = criaArquivos(situacao, printFlag);
     if (!pArq) {
         printf("Erro ao abrir o arquivo\n");
         return;
     }
     
     TipoRegistro temp = {0};
-    
-    while (fread(&temp, sizeof(TipoRegistro), 1, pArq) == 1){
+    int i = 0;
+    while (i < tam){
+        fread(&temp, sizeof(TipoRegistro), 1, pArq);
         Insere(temp, &pArvore, bench);
         bench->transf++;
     }
