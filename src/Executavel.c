@@ -83,7 +83,7 @@ int valida(int argc, char *argv[], Config *cfg){
     return 1;
 }
 
-void executar(Config *cfg, int flagTeste) {
+void executar(Config *cfg/*int flagTeste*/) {
     TipoIndice *tabela = malloc(sizeof(TipoIndice)*(ceil(cfg->quantidade/ITENSPAGINA)));
     TipoItem x; 
     Bench bench;
@@ -94,15 +94,16 @@ void executar(Config *cfg, int flagTeste) {
     timerStart(&timer);
     switch (cfg->metodo) {
         case 1:
-            acessoIndexado(tabela, &x,cfg->situacao, &bench);
+            acessoIndexado(tabela, &x,cfg->situacao, &bench, cfg->quantidade, cfg->imprimir);
             break;
         case 2:
-            pesquisaABB(x.chave, cfg->situacao,&bench);
+            pesquisaABB(x.chave, cfg->situacao,&bench, cfg->imprimir, cfg->quantidade);
             break;
         case 3:
-            arvoreB(x.chave, cfg->situacao, &bench);
+            arvoreB(x.chave, cfg->situacao, &bench, cfg->imprimir, cfg->quantidade);
             break;
         case 4:
+            arvoreBEstrela(x.chave, cfg->situacao, &bench, cfg->imprimir, cfg->quantidade);
             break;
     }
     bench.tempoExec = timerStop(&timer);
@@ -111,15 +112,15 @@ void executar(Config *cfg, int flagTeste) {
     printf("Tempo de execucao: %lf segundos\n", bench.tempoExec);
     free(tabela);
 }
-void rodarTestes(Config *cfg) {
-    // TODO: Fazer bateria de 10 testes automaticamente
-    // OBS:
-    // Nao criar arquivo toda vez ❌❌❌❌
-    // Chaves diferentes e bem distintas, maravilha! 
-    //Para cada quantidade de elementos 👌👌👌
+// void rodarTestes(Config *cfg) {
+//     // TODO: Fazer bateria de 10 testes automaticamente
+//     // OBS:
+//     // Nao criar arquivo toda vez ❌❌❌❌
+//     // Chaves diferentes e bem distintas, maravilha! 
+//     //Para cada quantidade de elementos 👌👌👌
 
-    //executar(cfg, 1);
-}
+//     //executar(cfg, 1);
+// }
 void printItem(TipoRegistro *item) {
     printf("Item Encontrado!\n");
     printf("Chave: %d\n", item->chave);

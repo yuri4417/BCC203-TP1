@@ -9,6 +9,6 @@ int main(int argc, char *argv[]){
     Config cfg;
     if(!valida(argc, argv, &cfg))
         return -1;
-    executar(&cfg, 0);
+    executar(&cfg);
     return 0;
 }
