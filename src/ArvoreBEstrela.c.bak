@@ -126,8 +126,6 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRe
             *Cresceu = false;
             return;
         }
-        else
-            i--;
         
     }
                
@@ -138,7 +136,7 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRe
     }
     
     bench->comp++;
-    if (Ap->Pt == Interna && !*Cresceu)  
+    if (!*Cresceu)  
         return;
 
     if (Ap->Pt == Externa){
@@ -150,16 +148,17 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRe
         }
         else{
             ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
-            ApTemp->Pt = Externa;
+            ApTemp->Pt = Interna;
             ApTemp->UU.U1.ne = 0;
             if(i < M){
                 InsereNaPaginaEstrela(ApTemp, Ap->UU.U1.re[2*M-1] ,NULL , bench);
                 Ap->UU.U1.ne--;
                 InsereNaPaginaEstrela(Ap, Reg ,NULL , bench);
             }
-            else InsereNaPaginaEstrela(ApTemp, Reg, NULL,bench);
+            else InsereNaPaginaEstrela(ApTemp, *RegRetorno, NULL,bench);
             int k = M;
-            for (j = 0; j < M; j++){
+            // for (j = 0; j < M; j++){
+            for (j = M; j < 2*M; j++){
                 InsereNaPaginaEstrela(ApTemp, Ap->UU.U1.re[k], NULL ,bench);
                 k++;
             }
