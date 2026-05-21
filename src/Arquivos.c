@@ -40,6 +40,7 @@ void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){
     TipoItem item2 = {0};
     int posTroca;
     for (int i = 0; i < qtdTotal; i++) {
+        printf("\n\n\n\n\nTESTE\n\n\n\n\n");
         posTroca = i + rand() % (qtdTotal - i);
 
         fseek(arqRef, i * sizeof(TipoItem), SEEK_SET);
@@ -79,7 +80,8 @@ FILE* criaArquivos(int situacao, int printFlag) { // Cria tres arquivos de 1M
         case 3:
             pArq = fopen("./data/arqRand-1M.bin", "rb");
             if (!pArq) {
-                pArq = fopen(".data/arqRand-1M.bin", "rb");
+                pArq = fopen("./data/arqRand-1M.bin", "wb");
+                geraAscendente(1000000, pArq, printFlag);
                 geraRandom(1000000, pArq, printFlag);
             }
             break;

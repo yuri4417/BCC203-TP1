@@ -7,21 +7,21 @@
 #include "ArvoreBEstrela.h"
 #include "Struct.h"
 #include "Arquivos.h"
-void LiberaArvore(TipoApontadorEstrela arvore) {
+void LiberaArvoreEstrela(TipoApontadorEstrela arvore) {
     if (arvore == NULL)
         return;
 
     // Só páginas internas possuem filhos
     if (arvore->Pt == Interna) {
         for (int i = 0; i <= arvore->UU.U0.ni; i++) {
-            LiberaArvore(arvore->UU.U0.pi[i]);
+            LiberaArvoreEstrela(arvore->UU.U0.pi[i]);
         }
     }
 
     free(arvore);
 }
 
-void Pesquisa(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
+void PesquisaEstrela(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
 {
     int i;
     TipoApontadorEstrela Pag;
@@ -36,8 +36,8 @@ void Pesquisa(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
         bench->comp++;
         bench->comp++;
         if (x->chave < Pag->UU.U0.ri[i - 1])
-            Pesquisa(x, Pag->UU.U0.pi[i - 1], bench);
-        else Pesquisa(x, Pag->UU.U0.pi[i], bench);
+            PesquisaEstrela(x, Pag->UU.U0.pi[i - 1], bench);
+        else PesquisaEstrela(x, Pag->UU.U0.pi[i], bench);
         return;
     }
     i = 1;
@@ -57,7 +57,7 @@ void Pesquisa(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
 }
 
 
-void InsereNaPagina(TipoApontadorEstrela Ap, TipoRegistro Reg, TipoApontadorEstrela ApDir, Bench *bench){
+void InsereNaPaginaEstrela(TipoApontadorEstrela Ap, TipoRegistro Reg, TipoApontadorEstrela ApDir, Bench *bench){
     int k;
     if(Ap->Pt == Interna){
         k = Ap->UU.U0.ni;
@@ -93,7 +93,7 @@ void InsereNaPagina(TipoApontadorEstrela Ap, TipoRegistro Reg, TipoApontadorEstr
     
 }
 
-void Ins(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontadorEstrela *ApRetorno, Bench *bench){
+void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontadorEstrela *ApRetorno, Bench *bench){
     long i =1; long j;
     TipoApontadorEstrela ApTemp;
 
@@ -132,7 +132,7 @@ void Ins(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro 
     bench->comp++;
     if (Ap->Pt == Interna) {
         if (Reg.chave < Ap->UU.U0.ri[i-1]) i--;
-        Ins(Reg, Ap->UU.U0.pi[i], Cresceu, RegRetorno, ApRetorno, bench);
+        InsEstrela(Reg, Ap->UU.U0.pi[i], Cresceu, RegRetorno, ApRetorno, bench);
     }
     
     bench->comp++;
@@ -142,22 +142,24 @@ void Ins(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro 
     if (Ap->Pt == Externa){
 
         if(Ap->UU.U1.ne < 2*M){
-            InsereNaPagina(Ap, Ap->UU.U1.re[i] ,NULL  , bench);
+            InsereNaPaginaEstrela(Ap, Reg ,NULL  , bench);
             *Cresceu = false;
             return;
         }
         else{
             ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
+            ApTemp->Pt = Interna;
             ApTemp->UU.U1.ne = 0;
             if(i < M){
-                InsereNaPagina(ApTemp, Ap->UU.U1.re[2*M-1] ,NULL , bench);
+                InsereNaPaginaEstrela(ApTemp, Ap->UU.U1.re[2*M-1] ,NULL , bench);
                 Ap->UU.U1.ne--;
-                InsereNaPagina(Ap, Reg ,NULL , bench);
+                InsereNaPaginaEstrela(Ap, Reg ,NULL , bench);
             }
-            else InsereNaPagina(ApTemp, *RegRetorno, NULL,bench);
+            else InsereNaPaginaEstrela(ApTemp, *RegRetorno, NULL,bench);
             int k = M;
-            for (j = 0; j < M; j++){
-                InsereNaPagina(ApTemp, Ap->UU.U1.re[k], NULL ,bench);
+            // for (j = 0; j < M; j++){
+            for (j = M; j < 2*M; j++){
+                InsereNaPaginaEstrela(ApTemp, Ap->UU.U1.re[k], NULL ,bench);
                 k++;
             }
             Ap->UU.U1.ne = M;
@@ -169,12 +171,13 @@ void Ins(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro 
     else{
         bench->comp++;
         if (Ap->UU.U0.ni < 2*M) { //Se houver espaco na pagina, insere o registro e nao precisa dividir
-            InsereNaPagina(Ap, *RegRetorno, *ApRetorno, bench);
+            InsereNaPaginaEstrela(Ap, *RegRetorno, *ApRetorno, bench);
             *Cresceu = false;
             return;
         }
         //Se a pagina tiver cheia, precisa dividir
-        ApTemp = (TipoApontador) malloc(sizeof(TipoPagina));
+        ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
+        ApTemp->Pt = Interna;
         ApTemp->UU.U0.ni = 0;
         ApTemp->UU.U0.pi[0] = NULL;
         TipoRegistro x;
@@ -182,54 +185,30 @@ void Ins(TipoRegistro Reg, TipoApontadorEstrela Ap, bool *Cresceu, TipoRegistro 
             //Pega o ultimo elemento da pagina, remove da esquerda e insere na direita (pag dos maiores)
              
             x.chave = Ap->UU.U0.ri[2*M-1];
-            InsereNaPagina(ApTemp, x, Ap->UU.U0.pi[2*M],bench);
+            InsereNaPaginaEstrela(ApTemp, x, Ap->UU.U0.pi[2*M],bench);
             Ap->UU.U0.ni--;
             //Insere a chave nova na pagina da esquerda
-            InsereNaPagina(Ap, *RegRetorno, *ApRetorno,bench);
+            InsereNaPaginaEstrela(Ap, *RegRetorno, *ApRetorno,bench);
         } 
         else //Caso contrario entra direto na pagina direita
-            InsereNaPagina(ApTemp, *RegRetorno, *ApRetorno,bench);
+            InsereNaPaginaEstrela(ApTemp, *RegRetorno, *ApRetorno,bench);
         for (j = M + 2; j <= 2*M; j++){//Move os elementos da metade direita
             x.chave = Ap->UU.U0.ri[j-1];
-            InsereNaPagina(ApTemp, x, Ap->UU.U0.pi[j],bench);
+            InsereNaPaginaEstrela(ApTemp, x, Ap->UU.U0.pi[j],bench);
         }
         x.chave = Ap->UU.U0.ri[M];
         Ap->UU.U0.ni = M;
         ApTemp->UU.U0.pi[0] = Ap->UU.U0.pi[M+1];
         *RegRetorno = x; //Promove a chave do meio para a pagina pai
         *ApRetorno = ApTemp;
-    }   
-    
-    
-
-    /*if (i < M + 1) {
-        InsereNaPagina(ApTemp, Ap->r[2*M-1], Ap->p[2*M],bench);
-        Ap->n--;
-        InsereNaPagina(Ap, *RegRetorno, *ApRetorno,bench);
-    } else InsereNaPagina(ApTemp, *RegRetorno, *ApRetorno,bench);
-    for (j = M + 2; j <= 2*M; j++)
-        InsereNaPagina(ApTemp, Ap->r[j-1], Ap->p[j],bench);
-    
-    bench->comp++;
-    if (Ap->Pt == Externa)
-        (Ap-> < 2*M) {
-        InsereNaPagina(Ap, *RegRetorno, *ApRetorno, bench);
-        *Cresceu = false;
-        return;
-    }
-    ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
-    ApTemp->n = 0;
-    ApTemp->p[0] = NULL;
-    */
-    
-    
+    }       
 }
 
-void Insere(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench) {
-    bool Cresceu;
+void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench) {
+    bool Cresceu = false;
     TipoRegistro RegRetorno;
     TipoApontadorEstrela ApRetorno, ApTemp;
-    Ins(Reg, *Ap, &Cresceu, &RegRetorno, &ApRetorno,bench);
+    InsEstrela(Reg, *Ap, &Cresceu, &RegRetorno, &ApRetorno,bench);
     
     if (Cresceu) {        
         
@@ -256,7 +235,7 @@ void Insere(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench) {
     }
 }
 
-void arvoreB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
+void arvoreBEstrela(int chave, int situacao, Bench *bench, int printFlag, int tam) {
     TipoApontadorEstrela pArvore = NULL;
     FILE* pArq = criaArquivos(situacao, printFlag);
     if (!pArq) {
@@ -268,14 +247,15 @@ void arvoreB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
     int i = 0;
     while (i < tam){
         fread(&temp, sizeof(TipoRegistro), 1, pArq);
-        Insere(temp, &pArvore, bench);
+        InsereEstrela(temp, &pArvore, bench);
         bench->transf++;
+        i++;
     }
         
     TipoRegistro busca = {0};
     busca.chave = chave;
-    Pesquisa(&busca, pArvore,bench);
+    PesquisaEstrela(&busca, pArvore,bench);
     
-    LiberaArvore(pArvore);
+    LiberaArvoreEstrela(pArvore);
     fclose(pArq);
 }
