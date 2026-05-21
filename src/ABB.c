@@ -1,17 +1,20 @@
 #include <stdio.h>
 #include "ABB.h"
 #include "Struct.h"
-
-void insereFilhos(FILE *arq, int chave, int pos) {
+#include "Executavel.h"
+#include "Arquivos.h"
+void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
     ItemABB atual;
     int indiceAtual = 0;
     while (1) {
         // move o ponteiro do  arquivo para a leitura
         fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
+        bench->transf++;
         if (fread(&atual, sizeof(ItemABB), 1, arq) != 1) {
             return; // Erro de leitura
         }   
         // Verifica se vai para a esquerda ou direita
+        bench->comp++;
         if (chave < atual.item.chave) {
             // se nao tiver filhos e so inserir
             if (atual.esq == -1) {
@@ -37,17 +40,15 @@ void insereFilhos(FILE *arq, int chave, int pos) {
     }
 }
 
-void criaArquivoABB(int situacao) {
+void criaArquivoABB(int situacao, Bench *bench, int printFlag, int tam) {
     FILE *arq = fopen("abb.bin", "w+b");
-    FILE *arqRef;
-    if (situacao == 1) arqRef = fopen("arqAscendente.bin", "rb");
-    else if (situacao == 2) arqRef = fopen("arqDescendente.bin", "rb");
-    else arqRef = fopen("arqAleatorio.bin","rb");
-    if(!arq || !arqRef) {
+    FILE *pArqRef = criaArquivos(situacao, printFlag);
+    
+    if(!arq || !pArqRef) {
         if(arq)
             fclose(arq);
         else
-            fclose(arqRef);
+            fclose(pArqRef);
         printf("Erro de memória\n");
         return;
     }
@@ -55,28 +56,28 @@ void criaArquivoABB(int situacao) {
     ItemABB temp = {0};
     int pos = 0;
     // Lê da referencia
-    while(fread(&temp.item, sizeof(TipoItem), 1, arqRef) == 1){
+    while(pos < tam) {
+        fread(&temp.item, sizeof(TipoItem), 1, pArqRef);
+        bench->transf++;
         temp.esq = temp.dir = -1;
         
         // Colocar no final do abb.bin
         fseek(arq, 0, SEEK_END);
         fwrite(&temp, sizeof(ItemABB), 1, arq);
-        
         if(pos > 0)
-            insereFilhos(arq, temp.item.chave, pos);
+            insereFilhos(arq, temp.item.chave, pos,bench);
         pos++;
     }
 
     fclose(arq);
-    fclose(arqRef);
+    fclose(pArqRef);
 }
 
-int pesquisaABB(int chave, int situacao) {
-    criaArquivoABB(situacao);
+int pesquisaABB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
+    criaArquivoABB(situacao, bench, printFlag, tam);
 
     FILE *arq = fopen("abb.bin", "rb");
-    if (!arq)
-    {
+    if (!arq) {
         printf("Erro ao abrir o arquivo!\n");
         return -1;
     }
@@ -84,39 +85,32 @@ int pesquisaABB(int chave, int situacao) {
     int pos = 0;
     
     while (1) {
-
         fseek(arq, pos * sizeof(ItemABB), SEEK_SET);
 
-        if (fread(&pesq, sizeof(ItemABB), 1, arq) != 1)
-        {           
+        bench->transf++;
+        if (fread(&pesq, sizeof(ItemABB), 1, arq) != 1) {           
             fclose(arq);
             break;
         }
         
+        bench->comp++;
         if (chave < pesq.item.chave) {
             if (pesq.esq == -1) break;
             pos = pesq.esq;
         }
-        else if (pesq.item.chave == chave) {
-            printf("Item encontrado: Chave: %d\n", pesq.item.chave);
-            fclose(arq);
-            return 1;
-        }
         else if (chave > pesq.item.chave) {
+            bench->comp++;
             if (pesq.dir == -1) break;
             pos = pesq.dir;
+        }
+        else {
+            bench->comp++;
+            printItem(&pesq.item);
+            fclose(arq);
+            return 1;
         }
     }
     printf("Item nao encontrado.\n");
     fclose(arq);
     return -1;
 }
-
-
-// PAGINACAO
-// ARQUIVO REF (ASC, DESC, RAND) -> ARQUIVO PAGINADO
-// PROCESSO
-// Pega um item do arquivo original
-// Insere em uma pagina
-// todos os nos filhos devem ficar na mesma pagina de um no 
-// Pagina cheia -> Cria nova pagina 67

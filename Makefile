@@ -1,8 +1,10 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -g -std=c11
+CFLAGS = -Wall -Wextra -Iinclude -g -MMD -MP
 
 SRC = $(wildcard src/*.c)
 OBJ = $(SRC:src/%.c=build/%.o)
+DEP = $(OBJ:.o=.d)
+
 TARGET = pesquisa
 
 all: $(TARGET)
@@ -22,3 +24,5 @@ clean:
 
 valgrind: all
 	valgrind --leak-check=full ./$(TARGET)
+
+-include $(DEP)

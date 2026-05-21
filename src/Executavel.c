@@ -1,3 +1,7 @@
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 199309L
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +11,33 @@
 #include "ABB.h"
 #include "ArvoreB.h"
 #include "ArvoreBEstrela.h"
-#include "Arquivos.h"
+#include "Struct.h"
+
+#ifdef _WIN32
+    #include <windows.h>
+    typedef LARGE_INTEGER Timer;
+    void timerStart(Timer *pTimer) {
+        QueryPerformanceCounter(t);
+    }
+    double timerStop(Timer *pIni) {
+        LARGE_INTEGER fim, freq;
+        QueryPerformanceCounter(&fim);
+        QueryPerformanceFrequency(&freq);
+        return (double) (fim.quadPart - ini->QuadPart) / freq.quadPart;
+    }
+#else
+    #include <time.h>
+    typedef struct timespec Timer;
+    void timerStart(Timer *t) {
+        clock_gettime(CLOCK_MONOTONIC, t);
+    }
+    double timerStop(Timer *pIni) {
+        struct timespec fim;
+        clock_gettime(CLOCK_MONOTONIC, &fim);
+        return (fim.tv_sec - pIni->tv_sec) + (fim.tv_nsec - pIni->tv_nsec) / 1e9;
+    }
+#endif
+
 
 int valida(int argc, char *argv[], Config *cfg){
     if (argc < 5)
@@ -53,23 +83,47 @@ int valida(int argc, char *argv[], Config *cfg){
     return 1;
 }
 
-void executar(Config *cfg){
+void executar(Config *cfg, int flagTeste) {
     TipoIndice *tabela = malloc(sizeof(TipoIndice)*(ceil(cfg->quantidade/ITENSPAGINA)));
     TipoItem x; 
-    criaArquivo(cfg->quantidade, cfg->situacao, cfg->imprimir);
+    Bench bench;
+    Timer timer;    
     x.chave = cfg->chave;
+    bench.comp = 0;
+    bench.transf= 0;
+    timerStart(&timer);
     switch (cfg->metodo) {
         case 1:
-            acessoIndexado(tabela, &x,cfg->situacao);
+            acessoIndexado(tabela, &x,cfg->situacao, &bench);
             break;
         case 2:
-            pesquisaABB(x.chave, cfg->situacao);
+            pesquisaABB(x.chave, cfg->situacao,&bench);
             break;
         case 3:
-            arvoreB(x.chave, cfg->situacao);
+            arvoreB(x.chave, cfg->situacao, &bench);
             break;
         case 4:
             break;
     }
+    bench.tempoExec = timerStop(&timer);
+    printf("Numero de transferencias: %ld\n", bench.transf);
+    printf("Numero de comparacoes: %ld\n", bench.comp);
+    printf("Tempo de execucao: %lf segundos\n", bench.tempoExec);
     free(tabela);
+}
+void rodarTestes(Config *cfg) {
+    // TODO: Fazer bateria de 10 testes automaticamente
+    // OBS:
+    // Nao criar arquivo toda vez ❌❌❌❌
+    // Chaves diferentes e bem distintas, maravilha! 
+    //Para cada quantidade de elementos 👌👌👌
+
+    //executar(cfg, 1);
+}
+void printItem(TipoRegistro *item) {
+    printf("Item Encontrado!\n");
+    printf("Chave: %d\n", item->chave);
+    printf("Dado 1: %ld\n", item->dado1);
+    printf("Dado 2: %s\n", item->dado2);
+    printf("Dado 3: %s\n", item->dado3);
 }

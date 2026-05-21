@@ -1,16 +1,8 @@
-    #include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "Arquivos.h"
 #include "Struct.h"
-
-
-void geraString(char *string, int tamString) { // preenche a string de maneira aleatória6
-    for (int i = 0; i < tamString; i++) {
-        string[i] = 'a'+ rand() % 26; // gera um caractere entre 'a' e 'z'
-    }
-    string[tamString] ='\0'; // termina a string
-}
 
 void geraAscendente(int qtdTotal, FILE* arq, int printFlag) {
     TipoItem *temp = calloc(1, sizeof(TipoItem));
@@ -67,28 +59,39 @@ void geraRandom (int qtdTotal, FILE* arqRef, int printFlag){
     printf("\n");
 }
 
-void criaArquivo(int qtdTotal, int situacao, int printFlag) {
-    FILE *arqRef = fopen("arqAscendente.bin", "w+b");
+FILE* criaArquivos(int situacao, int printFlag) { // Cria tres arquivos de 1M
+    FILE *pArq;
     switch (situacao) {
-        case 1: // Arquivo ascendente        
-            geraAscendente(qtdTotal, arqRef, printFlag);
-            break;
-        case 2: // Arquivo descendente
-            FILE *arqDesc = fopen("arqDescendente.bin", "wb");
-            if (!arqDesc) {
-                printf("Erro ao abrir o arquivo");
-                fclose(arqRef);
-                return;
+        case 1:
+            pArq = fopen("./data/arqCresc-1M.bin", "rb");
+            if (!pArq) {
+                pArq = fopen("./data/arqCresc-1M.bin", "wb");
+                geraAscendente(1000000, pArq, printFlag);
             }
-            geraDescendente (qtdTotal, arqDesc, printFlag);
+            break;
+        case 2:
+            pArq = fopen("./data/arqDesc-1M.bin", "rb");
+            if (!pArq) {
+                pArq = fopen("./data/arqDesc-1M.bin", "wb");
+                geraDescendente(1000000, pArq, printFlag);
+            }
             break;
         case 3:
-        //gera o arquivo aletorio
-            geraAscendente(qtdTotal, arqRef, 0);
-            geraRandom(qtdTotal, arqRef, printFlag);
+            pArq = fopen("./data/arqRand-1M.bin", "rb");
+            if (!pArq) {
+                pArq = fopen(".data/arqRand-1M.bin", "rb");
+                geraRandom(1000000, pArq, printFlag);
+            }
             break;
+
     }
-    fclose(arqRef);
-    if (situacao == 3)
-        rename("arqAscendente.bin", "arqAleatorio.bin");
+    return pArq;
+}
+
+
+void geraString(char *string, int tamString) { // preenche a string de maneira aleatória6
+    for (int i = 0; i < tamString; i++) {
+        string[i] = 'a'+ rand() % 26; // gera um caractere entre 'a' e 'z'
+    }
+    string[tamString] ='\0'; // termina a string
 }
