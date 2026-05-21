@@ -36,7 +36,6 @@ int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *benc
     long desloc;
     i = 0; 
     FILE *pArq =  criaArquivos(situacao, printFlag);
-    
     if (!pArq) {
         printf("Erro ao abrir o pArquivo.\n");
         return -1;

@@ -2,7 +2,7 @@
 #define STRUCT_H
 #define ITENSPAGINA 50
 #define MAXPAGINA 20000
-#define M 10
+#define M 2
 #define QTD_TESTES 10
 typedef struct {
     int metodo;

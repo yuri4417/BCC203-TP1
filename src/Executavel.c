@@ -13,31 +13,16 @@
 #include "ArvoreBEstrela.h"
 #include "Struct.h"
 
-#ifdef _WIN32
-    #include <windows.h>
-    typedef LARGE_INTEGER Timer;
-    void timerStart(Timer *pTimer) {
-        QueryPerformanceCounter(t);
-    }
-    double timerStop(Timer *pIni) {
-        LARGE_INTEGER fim, freq;
-        QueryPerformanceCounter(&fim);
-        QueryPerformanceFrequency(&freq);
-        return (double) (fim.quadPart - ini->QuadPart) / freq.quadPart;
-    }
-#else
-    #include <time.h>
-    typedef struct timespec Timer;
-    void timerStart(Timer *t) {
-        clock_gettime(CLOCK_MONOTONIC, t);
-    }
-    double timerStop(Timer *pIni) {
-        struct timespec fim;
-        clock_gettime(CLOCK_MONOTONIC, &fim);
-        return (fim.tv_sec - pIni->tv_sec) + (fim.tv_nsec - pIni->tv_nsec) / 1e9;
-    }
-#endif
-
+#include <time.h>
+typedef struct timespec Timer;
+void timerStart(Timer *t) {
+    clock_gettime(CLOCK_MONOTONIC, t);
+}
+double timerStop(Timer *pIni) {
+    struct timespec fim;
+    clock_gettime(CLOCK_MONOTONIC, &fim);
+    return (fim.tv_sec - pIni->tv_sec) + (fim.tv_nsec - pIni->tv_nsec) / 1e9;
+}
 
 int valida(int argc, char *argv[], Config *cfg){
     if (argc < 5)
@@ -91,6 +76,7 @@ void executar(Config *cfg/*int flagTeste*/) {
     x.chave = cfg->chave;
     bench.comp = 0;
     bench.transf= 0;
+    printf("\n");
     timerStart(&timer);
     switch (cfg->metodo) {
         case 1:
