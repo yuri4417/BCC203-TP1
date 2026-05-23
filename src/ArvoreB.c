@@ -29,12 +29,13 @@ void Pesquisa(TipoRegistro *x, TipoApontador Ap, Bench *bench){
         bench->comp++;
     }
     
-    bench->comp++;
+    
     if(x->chave == Ap->r[i-1].chave) {//Se achar printa ela
         *x = Ap->r[i-1];
         printItem(x);
         return;
     }
+    bench->comp++;
     
     bench->comp++;
     if (x->chave < Ap->r[i-1].chave) //Se for menor ele desce no apontador a esquerda
@@ -48,8 +49,8 @@ void InsereNaPagina(TipoApontador Ap, TipoRegistro Reg, TipoApontador ApDir, Ben
     k = Ap->n;
     while (k>0) {
         //Enquanto a chave for menor, ele vai deslocando os elementos para a direita
+        bench->comp++;
         if (Reg.chave >= Ap->r[k-1].chave) {
-            bench->comp++;
             break;
         }
         Ap->r[k] = Ap->r[k-1];
@@ -77,17 +78,18 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRet
         i++;
         bench->comp++;
     } 
+
     bench->comp++;
     if (Reg.chave == Ap->r[i-1].chave) { // se a chave ja existe, nao insere
         printf("Erro: Registro ja existente\n");
         *Cresceu = false;
         return;
     }
+    
     bench->comp++;
     if (Reg.chave < Ap->r[i-1].chave) 
         i--;
     Ins(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno, bench); //Desce para o filho aonde vai inserir
-    bench->comp++;
 
     if (!*Cresceu)//Se nao cresceu ele retorna
         return;
@@ -143,24 +145,26 @@ void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench) {
 
 void arvoreB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
     TipoApontador pArvore = NULL;
-    FILE* pArq = criaArquivos(situacao, printFlag);
+    FILE* pArq = criaArquivos(situacao, printFlag, tam);
     if (!pArq) {
         printf("Erro ao abrir o arquivo\n");
         return;
     }
-    
+    // Timer timer;
+    // timerStart(&timer);
     TipoRegistro temp = {0};
     int i = 0;
     while (i < tam) {
+        i++;
         fread(&temp, sizeof(TipoRegistro), 1, pArq);
-        Insere(temp, &pArvore, bench);
         bench->transf++;
+        Insere(temp, &pArvore, bench);
     }
         
     TipoRegistro busca = {0};
     busca.chave = chave;
     Pesquisa(&busca, pArvore,bench);
-    
+    // bench->tempoExec = timerStop(&timer);
     LiberaArvore(pArvore);
     fclose(pArq);
 }

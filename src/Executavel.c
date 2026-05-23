@@ -1,7 +1,3 @@
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 199309L
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,8 +9,12 @@
 #include "ArvoreBEstrela.h"
 #include "Struct.h"
 
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 199309L
+#endif
 #include <time.h>
-typedef struct timespec Timer;
+
+
 void timerStart(Timer *t) {
     clock_gettime(CLOCK_MONOTONIC, t);
 }
@@ -23,6 +23,7 @@ double timerStop(Timer *pIni) {
     clock_gettime(CLOCK_MONOTONIC, &fim);
     return (fim.tv_sec - pIni->tv_sec) + (fim.tv_nsec - pIni->tv_nsec) / 1e9;
 }
+
 
 int valida(int argc, char *argv[], Config *cfg){
     if (argc < 5)
@@ -70,13 +71,17 @@ int valida(int argc, char *argv[], Config *cfg){
 
 void executar(Config *cfg/*int flagTeste*/) {
     TipoIndice *tabela = malloc(sizeof(TipoIndice)*(ceil(cfg->quantidade/ITENSPAGINA)));
+    if(!tabela)
+    {
+        printf("Erro ao alocar memoria.\n");
+        exit(1);
+    }
     TipoItem x; 
-    Bench bench;
-    Timer timer;    
+    Timer timer;
+    Bench bench;    
     x.chave = cfg->chave;
     bench.comp = 0;
     bench.transf= 0;
-    printf("\n");
     timerStart(&timer);
     switch (cfg->metodo) {
         case 1:

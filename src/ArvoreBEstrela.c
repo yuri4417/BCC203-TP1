@@ -20,7 +20,8 @@ void ImprimeEstrela(TipoApontadorEstrela arvore) {
                 printf("%d ", arvore->UU.U0.ri[i]); // imprime chave separadora
             i++;
         }
-    } else {
+    } 
+    else {
         // Nó externo (folha): imprime todos os registros armazenados
         for (int i = 0; i < arvore->UU.U1.ne; i++)
             printf("%d ", arvore->UU.U1.re[i].chave);
@@ -28,14 +29,14 @@ void ImprimeEstrela(TipoApontadorEstrela arvore) {
     printf("\n");
 }
 
-void LiberaArvoreEstrela(TipoApontadorEstrela arvore) {
+void liberaArvoreEstrela(TipoApontadorEstrela arvore) {
     if (arvore == NULL)
         return;
 
     // Só páginas internas possuem filhos
     if (arvore->Pt == Interna) {
         for (int i = 0; i <= arvore->UU.U0.ni; i++) {
-            LiberaArvoreEstrela(arvore->UU.U0.pi[i]);
+            liberaArvoreEstrela(arvore->UU.U0.pi[i]);
         }
     }
 
@@ -55,10 +56,13 @@ void PesquisaEstrela(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
             bench->comp++;
         } 
         bench->comp++;
+
+
         bench->comp++;
         if (x->chave < Pag->UU.U0.ri[i - 1])
             PesquisaEstrela(x, Pag->UU.U0.pi[i - 1], bench);
-        else PesquisaEstrela(x, Pag->UU.U0.pi[i], bench);
+        else 
+            PesquisaEstrela(x, Pag->UU.U0.pi[i], bench);
         return;
     }
     i = 1;
@@ -66,15 +70,16 @@ void PesquisaEstrela(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
         i++;
         bench->comp++;
     }
-    
     bench->comp++;
+
+
     bench->comp++;
     if (x->chave == Pag->UU.U1.re[i - 1].chave){
         *x = Pag->UU.U1.re[i - 1];
         printItem(x);
     }
     else 
-        printf("Item nao esta presente na arvore\n");
+        printf("Item nao encontrado!\n");
 }
 
 
@@ -83,10 +88,10 @@ void InsereNaPaginaEstrela(TipoApontadorEstrela Ap, TipoRegistro Reg, TipoAponta
     if(Ap->Pt == Interna){
         k = Ap->UU.U0.ni;
         while(k>0){
-            if (Reg.chave >= Ap->UU.U0.ri[k-1]) {
-                bench->comp++;
+
+            bench->comp++;
+            if (Reg.chave >= Ap->UU.U0.ri[k-1])
                 break;
-            }
             Ap->UU.U0.ri[k] = Ap->UU.U0.ri[k-1];
             Ap->UU.U0.pi[k+1] = Ap->UU.U0.pi[k];
             k--;
@@ -94,39 +99,33 @@ void InsereNaPaginaEstrela(TipoApontadorEstrela Ap, TipoRegistro Reg, TipoAponta
         Ap->UU.U0.ri[k] = Reg.chave;
         Ap->UU.U0.pi[k+1] = ApDir;
         Ap->UU.U0.ni++;
-        
     }    
     else{
         k = Ap->UU.U1.ne;
       
         while(k>0){
-            if (Reg.chave >= Ap->UU.U1.re[k-1].chave) {
-                bench->comp++;
+            bench->comp++;
+            if (Reg.chave >= Ap->UU.U1.re[k-1].chave)
                 break;
-            }
             Ap->UU.U1.re[k] = Ap->UU.U1.re[k-1];
             k--;
         }
         Ap->UU.U1.re[k] = Reg;
         Ap->UU.U1.ne++;
     }
-    
-    
+
 }
 
-void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontadorEstrela *ApRetorno, Bench *bench){
+void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontadorEstrela *ApRetorno, Bench *bench, bool *memCheia){
     long i =1; long j;
     TipoApontadorEstrela ApTemp;
 
     if (*Ap == NULL) { // isso so acontece  
-        
         *Cresceu = true;
-
         *RegRetorno = Reg;
         (*ApRetorno) = NULL;
         return;
     }      
-           
     if((*Ap)->Pt == Interna){
         while (i < (*Ap)->UU.U0.ni && Reg.chave > (*Ap)->UU.U0.ri[i-1]){
             i++;
@@ -154,7 +153,8 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
     bench->comp++;
     if ((*Ap)->Pt == Interna) {
         if (Reg.chave < (*Ap)->UU.U0.ri[i-1]) i--;
-        InsEstrela(Reg, &(*Ap)->UU.U0.pi[i], Cresceu, RegRetorno, ApRetorno, bench);
+        InsEstrela(Reg, &(*Ap)->UU.U0.pi[i], Cresceu, RegRetorno, ApRetorno, bench, memCheia);
+        
     }
     
     bench->comp++;
@@ -170,6 +170,11 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
         }
         else{
             ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
+            if(!ApTemp) {
+                printf("Erro ao alocar memoria\n");  
+                *memCheia = true;   
+                return;
+            }
             ApTemp->Pt = Externa;
             ApTemp->UU.U1.ne = 0;
             if(i < M){
@@ -177,7 +182,8 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
                 (*Ap)->UU.U1.ne--;
                 InsereNaPaginaEstrela(*Ap, Reg ,NULL , bench);
             }
-            else InsereNaPaginaEstrela(ApTemp, Reg, NULL,bench);
+            else 
+                InsereNaPaginaEstrela(ApTemp, Reg, NULL,bench);
             int k = M;
             for (j = 0; j < M; j++){
                 InsereNaPaginaEstrela(ApTemp, (*Ap)->UU.U1.re[k], NULL ,bench);
@@ -198,6 +204,11 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
         }
         //Se a pagina tiver cheia, precisa dividir
         ApTemp = (TipoApontadorEstrela) malloc(sizeof(TipoPaginaEstrela));
+        if(!ApTemp) {
+            printf("Erro ao alocar memoria\n");  
+            *memCheia = true;   
+            return;
+        }
         ApTemp->Pt = Interna;
         ApTemp->UU.U0.ni = 0;
         ApTemp->UU.U0.pi[0] = NULL;
@@ -226,16 +237,19 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
     }       
 }
 
-void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench) {
+void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench, bool *memCheia){ 
     bool Cresceu = false;
     TipoRegistro RegRetorno;
     TipoApontadorEstrela ApRetorno, ApTemp;
-    InsEstrela(Reg, Ap, &Cresceu, &RegRetorno, &ApRetorno,bench);
+    InsEstrela(Reg, Ap, &Cresceu, &RegRetorno, &ApRetorno,bench, memCheia);
     
+    if(*memCheia) 
+        return;
     if (Cresceu) {        
         ApTemp = (TipoPaginaEstrela *) malloc(sizeof(TipoPaginaEstrela));
         if(!ApTemp) {
             printf("Erro ao alocar memoria\n");     
+            *memCheia = true;
             return;
         }
         if(*Ap == NULL){
@@ -243,7 +257,6 @@ void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench) {
             ApTemp->UU.U1.ne = 1;
             ApTemp->UU.U1.re[0] = RegRetorno;
             *Ap = ApTemp;
-            printf("Cresceu externa\n\n");
         }
         else{
 
@@ -259,17 +272,26 @@ void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench) {
 
 void arvoreBEstrela(int chave, int situacao, Bench *bench, int printFlag, int tam) {
     TipoApontadorEstrela pArvore = NULL;
-    FILE* pArq = criaArquivos(situacao, printFlag);
+    FILE* pArq = criaArquivos(situacao, printFlag, tam);
     if (!pArq) {
         printf("Erro ao abrir o arquivo\n");
         return;
     }
+    bool memCheia = false;
+    // Timer timer;
+    // timerStart(&timer);
     TipoItem temp = {0};
     int i = 0;
     while (i < tam) {
         if (fread(&temp, sizeof(TipoItem), 1, pArq) != 1)
             return;
-        InsereEstrela(temp, &pArvore, bench);
+        InsereEstrela(temp, &pArvore, bench, &memCheia);
+        if(memCheia) {
+            printf("Memoria cheia, nao foi possivel inserir todos os elementos\n");
+            liberaArvoreEstrela(pArvore);
+            fclose(pArq);
+            return;
+        }
         bench->transf++;
         i++;
     }
@@ -278,8 +300,9 @@ void arvoreBEstrela(int chave, int situacao, Bench *bench, int printFlag, int ta
     busca.chave = chave;
     PesquisaEstrela(&busca, pArvore,bench);
     
-    printf("ARVORE\n");
-    ImprimeEstrela(pArvore);
-    LiberaArvoreEstrela(pArvore);
+    // printf("ARVORE\n");
+    // ImprimeEstrela(pArvore);
+    // bench->tempoExec = timerStop(&timer);
+    liberaArvoreEstrela(pArvore);
     fclose(pArq);
 }

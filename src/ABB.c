@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "ABB.h"
 #include "Struct.h"
 #include "Executavel.h"
@@ -22,8 +23,8 @@ void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
                 fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
                 fwrite(&atual, sizeof(ItemABB), 1, arq);
                 return; 
-            } else // se tiver filhos atualiza o endereco
-                indiceAtual = atual.esq;
+            } // se tiver filhos atualiza o endereco
+            indiceAtual = atual.esq;
         } 
         else {
             // se nao tiver filhos e so inserir
@@ -32,17 +33,16 @@ void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
                 fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
                 fwrite(&atual, sizeof(ItemABB), 1, arq);
                 return;
-            } else {
-                // se tiver filhos atualiza o endereco
-                indiceAtual = atual.dir;
             }
+            // se tiver filhos atualiza o endereco
+            indiceAtual = atual.dir;
         }
+        
     }
 }
 
-void criaArquivoABB(int situacao, Bench *bench, int printFlag, int tam) {
-    FILE *arq = fopen("abb.bin", "w+b");
-    FILE *pArqRef = criaArquivos(situacao, printFlag);
+void criaArquivoABB(Bench *bench, int tam, FILE* pArqRef) {
+    FILE *arq = fopen("./data/abb.bin", "w+b");
     
     if(!arq || !pArqRef) {
         if(arq)
@@ -53,34 +53,48 @@ void criaArquivoABB(int situacao, Bench *bench, int printFlag, int tam) {
         return;
     }
     
-    ItemABB temp = {0};
-    int pos = 0;
-    // Lê da referencia
-    while(pos < tam) {
-        fread(&temp.item, sizeof(TipoItem), 1, pArqRef);
-        bench->transf++;
-        temp.esq = temp.dir = -1;
-        
-        // Colocar no final do abb.bin
-        fseek(arq, 0, SEEK_END);
-        fwrite(&temp, sizeof(ItemABB), 1, arq);
-        if(pos > 0)
-            insereFilhos(arq, temp.item.chave, pos,bench);
-        pos++;
+    TipoItem *buffer = malloc(sizeof(TipoItem) * BLOCK_SIZE);
+    if (!buffer) {
+        fclose(arq);
+        fclose(pArqRef);
+        return;
     }
+    int qtdRestante = tam;
+    int toRead;
+    int pos = 0;
+    while (qtdRestante > 0) {
+        toRead = (qtdRestante > BLOCK_SIZE) ? BLOCK_SIZE : qtdRestante;
+        int lidos = fread(buffer, sizeof(TipoItem), toRead, pArqRef);
+        bench->transf += lidos;
+        for (int i = 0; i < lidos; i++) {
+            ItemABB temp = {0};
+            temp.item = buffer[i];
+            temp.esq = temp.dir = -1;
 
+            fseek(arq, pos * sizeof(ItemABB), SEEK_SET);
+            fwrite(&temp, sizeof(ItemABB), 1, arq);
+
+            if (pos > 0)
+                insereFilhos(arq, temp.item.chave, pos, bench);
+            pos++;
+        }
+        qtdRestante -= lidos;
+    }
+    free(buffer);
     fclose(arq);
     fclose(pArqRef);
 }
 
 int pesquisaABB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
-    criaArquivoABB(situacao, bench, printFlag, tam);
-
-    FILE *arq = fopen("abb.bin", "rb");
+    FILE *pArqRef = criaArquivos(situacao, printFlag, tam);
+    criaArquivoABB(bench, tam, pArqRef);
+    FILE *arq = fopen("./data/abb.bin", "rb");
     if (!arq) {
         printf("Erro ao abrir o arquivo!\n");
         return -1;
     }
+    // Timer timer;
+    // timerStart(&timer);
     ItemABB pesq;
     int pos = 0;
     
@@ -90,24 +104,34 @@ int pesquisaABB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
         bench->transf++;
         if (fread(&pesq, sizeof(ItemABB), 1, arq) != 1) {           
             fclose(arq);
-            break;
+            return -1;
         }
         
         bench->comp++;
         if (chave < pesq.item.chave) {
-            if (pesq.esq == -1) break;
+            if (pesq.esq == -1){
+                fclose(arq);
+                // bench->tempoExec = timerStop(&timer);
+                return -1;
+            }
             pos = pesq.esq;
         }
-        else if (chave > pesq.item.chave) {
+        else{
             bench->comp++;
-            if (pesq.dir == -1) break;
-            pos = pesq.dir;
-        }
-        else {
-            bench->comp++;
-            printItem(&pesq.item);
-            fclose(arq);
-            return 1;
+            if (chave > pesq.item.chave) {
+                if (pesq.dir == -1){
+                    fclose(arq);
+                    // bench->tempoExec = timerStop(&timer);
+                    return -1;
+                }
+                pos = pesq.dir;
+            }
+            else {
+                printItem(&pesq.item);
+                fclose(arq);
+                // bench->tempoExec = timerStop(&timer);
+                return 1;
+            }
         }
     }
     printf("Item nao encontrado.\n");

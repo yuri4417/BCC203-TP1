@@ -3,6 +3,7 @@
 #include "AcessoIdx.h"
 #include "Executavel.h"
 #include "Arquivos.h"
+#include <math.h>
 
 int comparaCrescente(int valor, int chave) {
     return valor < chave;
@@ -17,84 +18,96 @@ int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave, int (*compara)(int
         return -1;
 
     int m = (esq + dir) / 2;
+
     bench->comp++;
     if (v[m].chave == chave)
         return m;
+    
+
     bench->comp++;
     if (compara(v[m].chave, chave)) {
         return pesquisaBinaria(v, m + 1, dir, chave,compara, bench);
     }
     else
         return pesquisaBinaria(v, esq, m - 1, chave,compara, bench);
-
 }
 
-
 int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *bench, int tam, int printFlag) {
-    TipoItem pagina[ITENSPAGINA];
-    int i, quantitens;
-    long desloc;
-    i = 0; 
-    FILE *pArq =  criaArquivos(situacao, printFlag);
+    FILE *pArq =  criaArquivos(situacao, printFlag, tam);
+    // Timer timer;
+    // timerStart(&timer);
     if (!pArq) {
         printf("Erro ao abrir o pArquivo.\n");
         return -1;
     }
 
     int pos = 0;
-    int chaveBusca = item->chave;
     TipoItem temp;
-    while (pos < tam) { 
-        fread(&temp, sizeof(TipoItem), 1, pArq);
+    int maxPags = ceil((double)tam / ITENSPAGINA);
+    
+    while (pos < maxPags)  { 
+        
+        if (fread(&temp, sizeof(TipoItem), 1, pArq) != 1)
+            break;
         bench->transf++;
+        
         tabela[pos].chave = temp.chave;
         tabela[pos].posicao = pos+1;
-        pos++;
-        fseek(pArq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
-    }
+        pos++; 
+        if(pos< maxPags)
+            fseek(pArq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
     
-    int crescente = (tabela[0].chave < tabela[1].chave);// 1 para crescente, 0 para decrescente
-    bench->comp++;
+    }
+
+    int chaveBusca = item->chave;
+    int quantitens;
+    TipoItem pagina[ITENSPAGINA];
+    int crescente;
+    if(situacao == 1)
+        crescente = 1;
+    else if(situacao == 2)
+        crescente = 0;
+    int i = 0;
     if(crescente){
         while (i < pos && tabela[i].chave <= chaveBusca){
             i++;
             bench->comp++;
         } // <= para crescente, >= para decrescente,
-        
     }
     else{
+        bench->comp++;
         while (i < pos && tabela[i].chave >= chaveBusca){
             i++;
             bench->comp++;
         }
+        bench->comp++;
     }
-    if (i == 0){
-        fclose(pArq);
+    if (i == 0){  //se ela é menor que a primeira nao tem
+        fclose(pArq);  
         return 0;
-    }
-        
+    }    
     else {
         if (i < pos)
             quantitens = ITENSPAGINA;
         else {
-            fseek (pArq, 0, SEEK_END);
-            quantitens = (ftell(pArq)/sizeof(TipoItem))%ITENSPAGINA;
-            if (!quantitens) 
+            quantitens = tam % ITENSPAGINA;
+            if (quantitens == 0) 
                 quantitens = ITENSPAGINA;  
         }
-        desloc = (tabela[i-1].posicao-1)*ITENSPAGINA*sizeof(TipoItem);
+        
+        long desloc = (tabela[i-1].posicao-1)*ITENSPAGINA*sizeof(TipoItem);
 
         fseek (pArq, desloc, SEEK_SET);
         fread (&pagina, sizeof(TipoItem), quantitens, pArq);
         bench->transf++;
-        
+        int ind;
         if(crescente)
-            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaCrescente, bench);
+            ind = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaCrescente, bench);
         else
-            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaDecrescente, bench);
+            ind = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaDecrescente, bench);
         
-        if(i >= 0) {
-            *item = pagina[i];
+        if(ind >= 0) {
+            *item = pagina[ind];  
             printItem(item);
             fclose (pArq);
             return 1;
@@ -105,4 +118,5 @@ int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *benc
             return 0;
         }       
     }
-} 
+    // bench->tempoExec = timerStop(&timer);
+}
