@@ -143,6 +143,8 @@ void rodarTestes(int numTestes, Config *cfg) {
     double mediaTransf = (double) vecBench[0].transf / numTestes;
     double mediaTempo =  (double) vecBench[0].tempoExec / numTestes;
     printf("\t ===== %d Testes Realizados - Média =====\n", numTestes);
+    printf("\t Método: %d\n", cfg->metodo);
+    printf("\t Quantidade de itens: %d\n", cfg->quantidade);
     printf("\t Comparacoes em media: %f\n", mediaComp);
     printf("\t Transferencias em media: %f\n", mediaTransf);
     printf("\t Tempo de execucao em media: %f s\n", mediaTempo);

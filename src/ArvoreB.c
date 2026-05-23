@@ -75,7 +75,7 @@ void InsereNaPagina(TipoApontador Ap, TipoRegistro Reg, TipoApontador ApDir, Ben
 }
 
 //Função de busca do local correto para inserir o registro, além de caminhar pela árvore
-void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontador *ApRetorno, Bench *bench){
+void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontador *ApRetorno, Bench *bench,bool *memCheia){
     long i =1; long j;
     TipoApontador ApTemp;
 
@@ -107,7 +107,7 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRet
         i--;
 
     //Desce para o filho aonde vai inserir
-    Ins(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno, bench); 
+    Ins(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno, bench,memCheia); 
 
     if (!*Cresceu)//Se nao cresceu ele retorna
         return;
@@ -122,6 +122,11 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRet
 
     //Se a pagina tiver cheia, precisa dividir
     ApTemp = (TipoApontador) malloc(sizeof(TipoPagina));
+    if(!ApTemp) {
+        printf("Erro ao alocar memoria\n");     
+        *memCheia = true;
+        return;
+    }
     ApTemp->n = 0;
     ApTemp->p[0] = NULL;
 
@@ -146,16 +151,20 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRet
 }
 
 //Função responsável por chama função Ins e atribui novos valores dos apontadores
-void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench) {
+void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench,bool *memCheia) {
     bool Cresceu;
     TipoRegistro RegRetorno;
     TipoApontador ApRetorno, ApTemp;
-    Ins(Reg, *Ap, &Cresceu, &RegRetorno, &ApRetorno,bench);
+    Ins(Reg, *Ap, &Cresceu, &RegRetorno, &ApRetorno,bench, memCheia);
     //Se a raiz crescer, entao cria uma nova pagina e coloca a chave promovida nela
+    if(*memCheia) {
+        return;
+    }
     if (Cresceu) {
         ApTemp = (TipoPagina *) malloc(sizeof(TipoPagina));
         if(!ApTemp) {
-            printf("Erro ao alocar memoria\n");     
+            printf("Erro ao alocar memoria\n");
+            *memCheia = true;     
             return;
         }
         ApTemp->n = 1;
@@ -172,15 +181,21 @@ void arvoreB(int chave, Bench *bench, int tam, FILE* pArq) {
     TipoApontador pArvore = NULL;
     TipoRegistro temp = {0};
     int i = 0;
-
+    bool memCheia = false;
     //Leitura dos itens do Arquivo de Registro
     while (i < tam) {
         i++;
         fread(&temp, sizeof(TipoRegistro), 1, pArq);
         bench->transf++;
-        Insere(temp, &pArvore, bench);
+        Insere(temp, &pArvore, bench, &memCheia);
+        if(memCheia) {
+            printf("Memoria cheia, nao foi possivel inserir todos os registros\n");
+            LiberaArvore(pArvore);
+            fclose(pArq);
+            return;
+        }
     }
-        
+   
     TipoRegistro busca = {0};
     busca.chave = chave;
     Pesquisa(&busca, pArvore,bench);

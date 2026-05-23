@@ -86,9 +86,9 @@ int acessoIndexado(int chave, int situacao, Bench *bench, int tam, FILE* pArq) {
 
     //Define qual ordenacao vai usar, crescente ou decrescente
     int crescente;
-    if(situacao == 1)
+    if(situacao == ARQCRESC)
         crescente = 1;
-    else if(situacao == 2)
+    else if(situacao == ARQDESC)
         crescente = 0;
 
     //Busca sequencial na tabela indice para descobrir qual pagina pode conter a chave

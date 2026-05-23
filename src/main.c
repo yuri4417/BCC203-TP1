@@ -19,8 +19,17 @@ int main(int argc, char *argv[]){
     Config cfg;
     cfg.imprimir = 0;
     cfg.metodo = ABB;
+    cfg.quantidade = 100000;
+    cfg.situacao = ARQCRESC;
+    rodarTestes(qtdTestes, &cfg);
+    cfg.quantidade = 100000;
+    cfg.situacao = ARQDESC;
+    rodarTestes(qtdTestes, &cfg);
     cfg.quantidade = 1000000;
-    cfg.situacao = ARQRAND;
+    cfg.situacao = ARQCRESC;
+    rodarTestes(qtdTestes, &cfg);
+    cfg.quantidade = 1000000;
+    cfg.situacao = ARQDESC;
     rodarTestes(qtdTestes, &cfg);
     return 0;
 }
