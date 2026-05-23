@@ -2,5 +2,5 @@
 #define ABB_H
 #include "Struct.h"
 
-int pesquisaABB(int chave, int situacao, Bench *bench, int printFlag, int tam);
+int pesquisaABB(int chave,Bench *bench, int tam, FILE *pArqRef);
 #endif //ABB_H

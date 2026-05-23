@@ -5,19 +5,22 @@
 #include "Executavel.h"
 #include "Arquivos.h"
 int main(int argc, char *argv[]){
+    //Semente aleatoria como NULL
     srand(time(NULL));
-    Config cfg;
-    if(!valida(argc, argv, &cfg))
-        return -1;
-    executar(&cfg);
     
-    /*criaArquivos(1, 1);
-    FILE *pArq = fopen("./data/arqCresc-1M.bin", "rb");
-    TipoItem temp = {0};
-    for (int i = 0; i < 10; i++) {
-        fread(&temp, sizeof(TipoItem), 1, pArq);
-        printf("%d\n", temp.chave);
-    }
-    */
+    // Config cfg;
+    // Bench bench;
+    // //Valida a entrada e executa o programa
+    // if(!valida(argc, argv, &cfg))
+    //     return -1;
+    // executar(&cfg, &bench);
+
+    int qtdTestes = 5;
+    Config cfg;
+    cfg.imprimir = 0;
+    cfg.metodo = ABB;
+    cfg.quantidade = 1000000;
+    cfg.situacao = ARQRAND;
+    rodarTestes(qtdTestes, &cfg);
     return 0;
 }

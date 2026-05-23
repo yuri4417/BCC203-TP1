@@ -1,13 +1,20 @@
 #ifndef STRUCT_H
 #define STRUCT_H
-#define BLOCK_SIZE 2000
+#define BLOCK_SIZE 175000
 #define ITENSPAGINA 50
 #define MAXPAGINA 200000
 #define M 2
 #define QTD_TESTES 10
+#define MAXTAM 1000000
 
+#define ACIDX 1
+#define ABB 2
+#define AB 3
+#define ABEst 4
 
-
+#define ARQCRESC 1
+#define ARQDESC  2
+#define ARQRAND  3
 
 //Struct com as variaveis de controle na linha de execucao
 typedef struct {
@@ -18,7 +25,7 @@ typedef struct {
     int imprimir;
 } Config;
 
-//BENCH
+//Bench
 typedef struct {
     long comp;
     long transf;

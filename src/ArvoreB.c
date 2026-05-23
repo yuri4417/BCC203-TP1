@@ -7,6 +7,7 @@
 #include "Struct.h"
 #include "Arquivos.h"
 
+//Função que libera Alocação da Árvore
 void LiberaArvore(TipoApontador arvore) {
     if (arvore == NULL)
         return;
@@ -16,10 +17,13 @@ void LiberaArvore(TipoApontador arvore) {
     free(arvore);
 }
 
+//Função que realiza a pesquisa na Árvore B
 void Pesquisa(TipoRegistro *x, TipoApontador Ap, Bench *bench){
     long i = 1;
+
+    // Se apontador apontar pra Nulo
     if (Ap == NULL) {
-        printf("\nChave nao encontrado!\n");
+        printf("\nItem %d nao encontrado!\n",x->chave);
         return;
     } 
     
@@ -29,26 +33,33 @@ void Pesquisa(TipoRegistro *x, TipoApontador Ap, Bench *bench){
         bench->comp++;
     }
     
-    
-    if(x->chave == Ap->r[i-1].chave) {//Se achar printa ela
+    // Se encontrar a chave
+    if(x->chave == Ap->r[i-1].chave) {
         *x = Ap->r[i-1];
-        printItem(x);
+        printItem(x); //Imprime ela
         return;
     }
     bench->comp++;
     
+
     bench->comp++;
-    if (x->chave < Ap->r[i-1].chave) //Se for menor ele desce no apontador a esquerda
+    //Se for menor ele desce no apontador a esquerda
+    if (x->chave < Ap->r[i-1].chave)
         Pesquisa(x, Ap->p[i-1], bench);
-    else //Se for maior ele desce no apontador a direita
+
+    //Se for maior ele desce no apontador a direita
+    else 
         Pesquisa(x, Ap->p[i], bench);
 }
 
+
+// Função responsável por inserir o item no registro/página
 void InsereNaPagina(TipoApontador Ap, TipoRegistro Reg, TipoApontador ApDir, Bench *bench){
     int k;
     k = Ap->n;
+
+    //Enquanto a chave for menor, ele vai deslocando os elementos para a direita
     while (k>0) {
-        //Enquanto a chave for menor, ele vai deslocando os elementos para a direita
         bench->comp++;
         if (Reg.chave >= Ap->r[k-1].chave) {
             break;
@@ -57,60 +68,72 @@ void InsereNaPagina(TipoApontador Ap, TipoRegistro Reg, TipoApontador ApDir, Ben
         Ap->p[k+1] = Ap->p[k];
         k--;
     }
-    //Achou aonde colocar a chave, entao insere
+    //Encontrou aonde colocar a chave, inserindo
     Ap->r[k] = Reg;
     Ap->p[k+1] = ApDir;
     Ap->n++;
 }
 
+//Função de busca do local correto para inserir o registro, além de caminhar pela árvore
 void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontador *ApRetorno, Bench *bench){
     long i =1; long j;
     TipoApontador ApTemp;
-    //Se chegar em uma pagina nula, entao a chave deve ser inserida ali, entao retorna a chave para ser inserida na pagina pai
+
+    //Se chegar em uma pagina nula, entao a chave deve ser inserida ali, retornando a chave para ser inserida na pagina pai
     if (Ap == NULL) {
         *Cresceu = true;
         *RegRetorno = Reg;
         (*ApRetorno) = NULL;
         return;
     }
-    //Procura em qual filho descer
+
+    //Procura de qual filho descer
     while (i < Ap->n && Reg.chave > Ap->r[i-1].chave){
         i++;
         bench->comp++;
     } 
 
+    //Se a chave existir, nao deve inserir
     bench->comp++;
-    if (Reg.chave == Ap->r[i-1].chave) { // se a chave ja existe, nao insere
-        printf("Erro: Registro ja existente\n");
+    if (Reg.chave == Ap->r[i-1].chave) { 
+        printf("Erro: Registro %d ja existente\n",Reg.chave);
         *Cresceu = false;
         return;
     }
     
+
     bench->comp++;
     if (Reg.chave < Ap->r[i-1].chave) 
         i--;
-    Ins(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno, bench); //Desce para o filho aonde vai inserir
+
+    //Desce para o filho aonde vai inserir
+    Ins(Reg, Ap->p[i], Cresceu, RegRetorno, ApRetorno, bench); 
 
     if (!*Cresceu)//Se nao cresceu ele retorna
         return;
 
+    //Se houver espaco na pagina, insere o registro e nao precisa dividir
     bench->comp++;
-    if (Ap->n < 2*M) { //Se houver espaco na pagina, insere o registro e nao precisa dividir
+    if (Ap->n < 2*M) {
         InsereNaPagina(Ap, *RegRetorno, *ApRetorno, bench);
         *Cresceu = false;
         return;
     }
+
     //Se a pagina tiver cheia, precisa dividir
     ApTemp = (TipoApontador) malloc(sizeof(TipoPagina));
     ApTemp->n = 0;
     ApTemp->p[0] = NULL;
-    if (i < M + 1) {//Decide se a chave entra na metade esquerda ou direita
+
+    //Decide se a chave entra na metade esquerda ou direita
+    if (i < M + 1) {
         //Pega o ultimo elemento da pagina, remove da esquerda e insere na direita (pag dos maiores)
         InsereNaPagina(ApTemp, Ap->r[2*M-1], Ap->p[2*M],bench);
         Ap->n--;
         //Insere a chave nova na pagina da esquerda
         InsereNaPagina(Ap, *RegRetorno, *ApRetorno,bench);
     } 
+    
     else //Caso contrario entra direto na pagina direita
         InsereNaPagina(ApTemp, *RegRetorno, *ApRetorno,bench);
     for (j = M + 2; j <= 2*M; j++)//Move os elementos da metade direita
@@ -122,6 +145,7 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRet
     
 }
 
+//Função responsável por chama função Ins e atribui novos valores dos apontadores
 void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench) {
     bool Cresceu;
     TipoRegistro RegRetorno;
@@ -143,17 +167,13 @@ void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench) {
     }   
 }
 
-void arvoreB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
+// A função da própria arvore B, inicializando, tentando abrir o arquivo e iniciando a leitura do arquivo de registros, depois realizando a pesquisa
+void arvoreB(int chave, Bench *bench, int tam, FILE* pArq) {
     TipoApontador pArvore = NULL;
-    FILE* pArq = criaArquivos(situacao, printFlag, tam);
-    if (!pArq) {
-        printf("Erro ao abrir o arquivo\n");
-        return;
-    }
-    // Timer timer;
-    // timerStart(&timer);
     TipoRegistro temp = {0};
     int i = 0;
+
+    //Leitura dos itens do Arquivo de Registro
     while (i < tam) {
         i++;
         fread(&temp, sizeof(TipoRegistro), 1, pArq);
@@ -164,7 +184,6 @@ void arvoreB(int chave, int situacao, Bench *bench, int printFlag, int tam) {
     TipoRegistro busca = {0};
     busca.chave = chave;
     Pesquisa(&busca, pArvore,bench);
-    // bench->tempoExec = timerStop(&timer);
     LiberaArvore(pArvore);
     fclose(pArq);
 }
