@@ -69,7 +69,6 @@ void geraOrdenado(FILE** pArq, char* filePath, int printFlag, int countChave, in
             buffer[i].dado1 = rand();
             sprintf(buffer[i].dado2, "%d %ld", buffer[i].chave, buffer[i].dado1);
             sprintf(buffer[i].dado3, "Chave %d dado long %ld", buffer[i].chave, buffer[i].dado1);
-            //Se o arquivo nao existir ele printa as chaves
             if (printFlag)
                 printf("Chave: %d ", buffer[i].chave);
             countChave += chaveSum;
@@ -93,16 +92,17 @@ void geraRandom (FILE** arqRef, int printFlag, int tam) {
 
     *arqRef = fopen(fileName, "r+b");
     if (*arqRef != NULL) {
-        if (printFlag) 
+        if (printFlag) {
             printFile(*arqRef, tam);
+            rewind(*arqRef);
+        }
         return; 
     }
 
     //Abre/cria o arquivo de referencia
     FILE *pFileCopy = NULL;
-    if (!validaArquivo(cresc1M, &pFileCopy)) {
+    if (!validaArquivo(cresc1M, &pFileCopy))
         geraOrdenado(&pFileCopy, cresc1M, printFlag, 1, 1, 0, tam);
-    }
     if (!pFileCopy) 
         return;
 
@@ -153,13 +153,13 @@ FILE* criaArquivos(int situacao, int printFlag, int tam) {
 
     //Decide qual arquivo gerar
     switch (situacao) {
-        case 1:
+        case ARQCRESC:
             geraOrdenado(&pArq, cresc1M, printFlag, 1, 1, 0, tam);
             break;
-        case 2:
+        case ARQDESC:
             geraOrdenado(&pArq, desc1M, printFlag, MAXTAM, -1, sizeof(TipoItem) * (MAXTAM - tam), tam);
             break;
-        case 3:
+        case ARQRAND:
             geraRandom(&pArq, printFlag, tam);
             break;
 

@@ -7,12 +7,12 @@
 #include "Struct.h"
 #include "Arquivos.h"
 
-//Função responsável pela impressão da Árvore B estrela
+//Funcao responsavel pela impressao da arvore B estrela
 void ImprimeEstrela(TipoApontadorEstrela arvore) {
     if (arvore == NULL) 
         return;
 
-    // Nó interno: intercala recursão nos filhos com impressão das chaves-separadoras
+    // No interno: intercala recursao nos filhos com impressao das chaves-separadoras
     if (arvore->Pt == Interna) {
         int i = 0;
         while (i <= arvore->UU.U0.ni) {
@@ -23,7 +23,7 @@ void ImprimeEstrela(TipoApontadorEstrela arvore) {
         }
     } 
 
-    // Nó externo (folha): imprime todos os registros armazenados
+    // No externo (folha): imprime todos os registros armazenados
     else {
         for (int i = 0; i < arvore->UU.U1.ne; i++)
             printf("%d ", arvore->UU.U1.re[i].chave);
@@ -31,12 +31,12 @@ void ImprimeEstrela(TipoApontadorEstrela arvore) {
     printf("\n");
 }
 
-//Função responsável pela desalocação de memória da Árvore
+//Funcao responsavel pela desalocacao de memoria da arvore
 void liberaArvoreEstrela(TipoApontadorEstrela arvore) {
     if (arvore == NULL)
         return;
 
-    // Só páginas internas possuem filhos
+    // So paginas internas possuem filhos
     if (arvore->Pt == Interna) {
         for (int i = 0; i <= arvore->UU.U0.ni; i++) {
             liberaArvoreEstrela(arvore->UU.U0.pi[i]);
@@ -46,25 +46,26 @@ void liberaArvoreEstrela(TipoApontadorEstrela arvore) {
     free(arvore);
 }
 
-//Função voltada a realizar a pesquisa na Arvore B*
+//Funcao voltada a realizar a pesquisa na Arvore B*
 void PesquisaEstrela(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
 {
     int i;
     TipoApontadorEstrela Pag;
     Pag = Ap;
     
-    //Navegação nos nós internos
+    //Navegacao nos nos internos
     if (Ap->Pt == Interna) {
         i = 1;
 
-        //While para quando encontra uma chave maior ou igual à buscada ou quando acaba as chave
+
+        //While para quando encontra uma chave maior ou igual a buscada ou quando acaba as chaves
         while (i < Pag->UU.U0.ni && x->chave > Pag->UU.U0.ri[i - 1]){
             i++;
             bench->comp++;
         } 
         bench->comp++;
 
-        //Escolhe qual filho irá seguir para descer na arvore
+        //Escolhe qual filho ira seguir para descer na arvore
         bench->comp++;
         if (x->chave < Pag->UU.U0.ri[i - 1]) // Esquerda
             PesquisaEstrela(x, Pag->UU.U0.pi[i - 1], bench);
@@ -73,10 +74,10 @@ void PesquisaEstrela(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
         return;
     }
 
-    //Navegação nos nós externos
+    //Navegacao nos nos externos
     i = 1;
 
-    //Percorre a página folha
+    //Percorre a pagina folha
     while (i < Pag->UU.U1.ne && x->chave > Pag->UU.U1.re[i - 1].chave){
         i++;
         bench->comp++;
@@ -93,55 +94,53 @@ void PesquisaEstrela(TipoRegistro *x, TipoApontadorEstrela Ap, Bench *bench)
         printf("Item %d nao encontrado!\n",x->chave);
 }
 
-//Função que insere o item no registro
+//Funcao que insere o item no registro
 void InsereNaPaginaEstrela(TipoApontadorEstrela Ap, TipoRegistro Reg, TipoApontadorEstrela ApDir, Bench *bench){
     int k;
 
-    // Inserção no nó interno
+    // Insercao no no interno
     if(Ap->Pt == Interna){
         k = Ap->UU.U0.ni;
         while(k>0){
             bench->comp++;
 
-            // Verifica se acho a posição correta
+            // Verifica se acho a posicao correta
             if (Reg.chave >= Ap->UU.U0.ri[k-1])
                 break;
 
-            // Se não, passa pra direita
+            // Se nao, passa pra direita
             Ap->UU.U0.ri[k] = Ap->UU.U0.ri[k-1];
             Ap->UU.U0.pi[k+1] = Ap->UU.U0.pi[k];
             k--;
         }
 
-        // Inserção
         Ap->UU.U0.ri[k] = Reg.chave;
         Ap->UU.U0.pi[k+1] = ApDir;
         Ap->UU.U0.ni++;
     }    
 
-    // Inserção no nó externo
+    // Insercao no no externo
     else{
         k = Ap->UU.U1.ne;
       
         while(k>0){
             bench->comp++;
 
-            // Verifica se acho a posição correta
+            // Verifica se acho a posicao correta
             if (Reg.chave >= Ap->UU.U1.re[k-1].chave)
                 break;
-            // Se não, passa pra direita
+            // Se nao, passa pra direita
             Ap->UU.U1.re[k] = Ap->UU.U1.re[k-1];
             k--;
         }
 
-        //Inserção
         Ap->UU.U1.re[k] = Reg;
         Ap->UU.U1.ne++;
     }
 
 }
 
-//Função responsável por realizar a busca de qual é a posição certa para inserir o registro
+//Funcao responsavel por realizar a busca de qual e a posicao certa para inserir o registro
 void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontadorEstrela *ApRetorno, Bench *bench, bool *memCheia){
     long i =1; long j;
     TipoApontadorEstrela ApTemp;
@@ -185,11 +184,11 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
             i--;
     }
                
-    // Nós internos
+    // Nos internos
     bench->comp++;
     if ((*Ap)->Pt == Interna) {
 
-        // Comparação para saber se vai pela esquerda ou direita
+        // Comparacao para saber se vai pela esquerda ou direita
         if (Reg.chave < (*Ap)->UU.U0.ri[i-1]) 
             i--;
 
@@ -201,7 +200,7 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
     if ((*Ap)->Pt == Interna && !*Cresceu)  
         return;
 
-    // Inserção em no folha
+    // Insercao em no folha
     if ((*Ap)->Pt == Externa){
 
         // Tem espaço...
@@ -246,7 +245,7 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
         }
     }
 
-    // Inserção em no interno/índice
+    // Insercao em no interno/índice
     else{
         bench->comp++;
         if ((*Ap)->UU.U0.ni < 2*M) { // Se houver espaco na pagina, insere o registro e nao precisa dividir
@@ -264,10 +263,10 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
         ApTemp->Pt = Interna;
         ApTemp->UU.U0.ni = 0;
         ApTemp->UU.U0.pi[0] = NULL;
-        TipoRegistro x;
+        TipoRegistro x; //porcausa da insere na pag
         if (i < M + 1) {// Decide se a chave entra na metade esquerda ou direita
+
             // Pega o ultimo elemento da pagina, remove da esquerda e insere na direita (pag dos maiores)
-             
             x.chave = (*Ap)->UU.U0.ri[2*M-1];
             InsereNaPaginaEstrela(ApTemp, x, (*Ap)->UU.U0.pi[2*M],bench);
             (*Ap)->UU.U0.ni--;
@@ -289,18 +288,16 @@ void InsEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, bool *Cresceu, TipoR
     }       
 }
 
-// Função de inserção chama InsEstrela e, caso necessário, cria nova pagina raiz
+// Funcao de insercao chama InsEstrela e, caso necessario, cria nova pagina raiz
 void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench, bool *memCheia){ 
     bool Cresceu = false;
     TipoRegistro RegRetorno;
     TipoApontadorEstrela ApRetorno, ApTemp;
     InsEstrela(Reg, Ap, &Cresceu, &RegRetorno, &ApRetorno,bench, memCheia);
     
-    // Memoria ram cheia
     if(*memCheia) 
         return;
 
-    // Criar nova raiz pois Cresceu = True
     if (Cresceu) {        
         // Aloca nova pagina de no raiz
         ApTemp = (TipoPaginaEstrela *) malloc(sizeof(TipoPaginaEstrela));
@@ -318,7 +315,7 @@ void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench, boo
             *Ap = ApTemp;
         }
 
-        // Raiz foi dividida
+        // Arvore nao vazia, nova raiz vira no interno
         else{
             ApTemp->Pt = Interna;
             ApTemp->UU.U0.ni = 1;
@@ -330,7 +327,7 @@ void InsereEstrela(TipoRegistro Reg, TipoApontadorEstrela *Ap, Bench *bench, boo
     }
 }
 
-// Função do método, chamando todas as funções complementares, abrindo o arquivo e lendo os valores do arquivo de registros
+// Funcao do método, chamando todas as funções complementares, abrindo o arquivo e lendo os valores do arquivo de registros
 void arvoreBEstrela(int chave, Bench *bench, int tam, FILE *pArq) {
     TipoApontadorEstrela pArvore = NULL;
 

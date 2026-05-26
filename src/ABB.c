@@ -5,7 +5,7 @@
 #include "Executavel.h"
 #include "Arquivos.h"
 
-//Insere um nó na ABB externa
+//Insere um no na ABB externa
 void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
     ItemABB atual;
 
@@ -26,7 +26,7 @@ void insereFilhos(FILE *arq, int chave, int pos, Bench *bench) {
             if (atual.esq == -1) {
                 atual.esq = pos;
                 //Atualiza o no no arquivo
-                fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET);
+                fseek(arq, indiceAtual * sizeof(ItemABB), SEEK_SET); //porque leu antes
                 fwrite(&atual, sizeof(ItemABB), 1, arq);
                 return; 
             } 
@@ -102,7 +102,7 @@ void criaArquivoABB(Bench *bench, int tam, FILE* pArqRef) {
             fwrite(&temp, sizeof(ItemABB), 1, arq);
 
             //Apenas se nao for a raiz (pos=0), ai insere os filhos
-            if (pos > 0)
+            if (pos > 0) 
                 insereFilhos(arq, temp.item.chave, pos, bench);
             pos++;
         }

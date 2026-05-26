@@ -7,7 +7,7 @@
 #include "Struct.h"
 #include "Arquivos.h"
 
-//Função que libera Alocação da Árvore
+//Funcao que libera Alocacao da arvore
 void LiberaArvore(TipoApontador arvore) {
     if (arvore == NULL)
         return;
@@ -17,7 +17,7 @@ void LiberaArvore(TipoApontador arvore) {
     free(arvore);
 }
 
-//Função que realiza a pesquisa na Árvore B
+//Funcao que realiza a pesquisa na Arvore B
 void Pesquisa(TipoRegistro *x, TipoApontador Ap, Bench *bench){
     long i = 1;
 
@@ -53,7 +53,7 @@ void Pesquisa(TipoRegistro *x, TipoApontador Ap, Bench *bench){
 }
 
 
-// Função responsável por inserir o item no registro/página
+// Funcao responsavel por inserir o item no registro/pagina
 void InsereNaPagina(TipoApontador Ap, TipoRegistro Reg, TipoApontador ApDir, Bench *bench){
     int k;
     k = Ap->n;
@@ -74,7 +74,7 @@ void InsereNaPagina(TipoApontador Ap, TipoRegistro Reg, TipoApontador ApDir, Ben
     Ap->n++;
 }
 
-//Função de busca do local correto para inserir o registro, além de caminhar pela árvore
+//Funcao de busca do local correto para inserir o registro, alem de caminhar pela arvore
 void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRetorno, TipoApontador *ApRetorno, Bench *bench,bool *memCheia){
     long i =1; long j;
     TipoApontador ApTemp;
@@ -120,7 +120,7 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRet
         return;
     }
 
-    //Se a pagina tiver cheia, precisa dividir
+    //Se a pagina estiver cheia, precisa dividir
     ApTemp = (TipoApontador) malloc(sizeof(TipoPagina));
     if(!ApTemp) {
         printf("Erro ao alocar memoria\n");     
@@ -150,7 +150,7 @@ void Ins(TipoRegistro Reg, TipoApontador Ap, bool *Cresceu, TipoRegistro *RegRet
     
 }
 
-//Função responsável por chama função Ins e atribui novos valores dos apontadores
+//Funcao responsavel por chama funcao Ins e atribui novos valores dos apontadores
 void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench,bool *memCheia) {
     bool Cresceu;
     TipoRegistro RegRetorno;
@@ -176,7 +176,7 @@ void Insere(TipoRegistro Reg, TipoApontador *Ap, Bench *bench,bool *memCheia) {
     }   
 }
 
-// A função da própria arvore B, inicializando, tentando abrir o arquivo e iniciando a leitura do arquivo de registros, depois realizando a pesquisa
+// A funcao da propria arvore B, inicializando, tentando abrir o arquivo e iniciando a leitura do arquivo de registros, depois realizando a pesquisa
 void arvoreB(int chave, Bench *bench, int tam, FILE* pArq) {
     TipoApontador pArvore = NULL;
     TipoRegistro temp = {0};

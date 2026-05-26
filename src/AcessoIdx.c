@@ -105,7 +105,7 @@ int acessoIndexado(int chave, int situacao, Bench *bench, int tam, FILE* pArq) {
         while (i < pos && tabela[i].chave >= chaveBusca){
             i++;
             bench->comp++;
-        }// >= para decrescente,
+        }// >= para decrescente
         bench->comp++;
     }
     //Se i = 0 a chave nao pertence a nenhuma pagina

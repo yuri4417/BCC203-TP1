@@ -3,7 +3,7 @@
 #define BLOCK_SIZE 175000
 #define ITENSPAGINA 50
 #define MAXPAGINA 200000
-#define M 2
+#define M 50
 #define QTD_TESTES 10
 #define MAXTAM 1000000
 

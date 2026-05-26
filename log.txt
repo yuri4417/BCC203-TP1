@@ -1,0 +1,49 @@
+	 ===== Teste 1 =====
+Item Encontrado!
+Chave: 50000
+Dado 1: 1511231111
+Dado 2: 50000 1511231111
+Dado 3: Chave 50000 dado long 1511231111
+Numero de transferencias: 5000100000
+Numero de comparacoes: 5000050000
+Tempo de execucao: 7132.664328 segundos
+	 ===== Teste 2 =====
+Item Encontrado!
+Chave: 100000
+Dado 1: 1384356325
+Dado 2: 100000 1384356325
+Dado 3: Chave 100000 dado long 1384356325
+Numero de transferencias: 5000150000
+Numero de comparacoes: 5000150000
+Tempo de execucao: 7077.649876 segundos
+	 ===== 2 Testes Realizados - Média =====
+	 Método: 2
+	 Quantidade de itens: 100000
+	 Comparacoes em media: 5000100000.000000
+	 Transferencias em media: 5000125000.000000
+	 Tempo de execucao em media: 7105.157102 s
+	 ===== Teste 1 =====
+Item Encontrado!
+Chave: 50000
+Dado 1: 1283386949
+Dado 2: 50000 1283386949
+Dado 3: Chave 50000 dado long 1283386949
+Numero de transferencias: 5000100001
+Numero de comparacoes: 5000000002
+Tempo de execucao: 6885.177548 segundos
+	 ===== Teste 2 =====
+Item Encontrado!
+Chave: 100000
+Dado 1: 1167230537
+Dado 2: 100000 1167230537
+Dado 3: Chave 100000 dado long 1167230537
+Numero de transferencias: 5000050001
+Numero de comparacoes: 4999950002
+Tempo de execucao: 6956.840418 segundos
+	 ===== 2 Testes Realizados - Média =====
+	 Método: 2
+	 Quantidade de itens: 100000
+	 Comparacoes em media: 4999975002.000000
+	 Transferencias em media: 5000075001.000000
+	 Tempo de execucao em media: 6921.008983 s
+	 ===== Teste 1 =====
