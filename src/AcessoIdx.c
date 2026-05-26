@@ -3,110 +3,159 @@
 #include "AcessoIdx.h"
 #include "Executavel.h"
 #include "Arquivos.h"
+#include <stdlib.h>
+#include <math.h>
 
+//Se for crescente compara dois valores
 int comparaCrescente(int valor, int chave) {
     return valor < chave;
 }
 
+//Se for descrescente compara dois valores
 int comparaDecrescente(int valor, int chave) {
     return valor > chave;
 }
 
+//Faz a Pesquisa Binaria quando chegar na pagina correta
 int pesquisaBinaria(TipoItem *v, int esq, int dir, int chave, int (*compara)(int, int), Bench *bench) {
+    //Se esq passar da dir quer dizer que o item nao existe
     if (esq > dir)
         return -1;
 
+    //Calcula o meio
     int m = (esq + dir) / 2;
+
     bench->comp++;
+    //Se a chave for igual retorna a pos da chave que achou 
     if (v[m].chave == chave)
         return m;
+    
+
     bench->comp++;
+    //Compara as chaves para crescente ou decrescente
     if (compara(v[m].chave, chave)) {
+        //Busca metade direita
         return pesquisaBinaria(v, m + 1, dir, chave,compara, bench);
     }
     else
+        //Busca metade esquerda
         return pesquisaBinaria(v, esq, m - 1, chave,compara, bench);
-
 }
 
 
-int acessoIndexado(TipoIndice tabela[],TipoItem *item, int situacao, Bench *bench, int tam, int printFlag) {
-    TipoItem pagina[ITENSPAGINA];
-    int i, quantitens;
-    long desloc;
-    i = 0; 
-    FILE *pArq =  criaArquivos(situacao, printFlag);
-    if (!pArq) {
-        printf("Erro ao abrir o pArquivo.\n");
-        return -1;
-    }
+//Faz a busca por Acesso Indexado
+int acessoIndexado(int chave, int situacao, Bench *bench, int tam, FILE* pArq) {
+    //Cria a tabela de indices
+    TipoIndice *tabela = malloc(sizeof(TipoIndice)*(ceil(tam/ITENSPAGINA)));
+    if(!tabela)
+    {
+        printf("Erro ao alocar memoria.\n");
+        exit(1);
 
-    int pos = 0;
-    int chaveBusca = item->chave;
-
-
-    TipoItem temp;
-    while (pos < tam) { 
-        fread(&temp, sizeof(TipoItem), 1, pArq);
-        bench->transf++;
-        tabela[pos].chave = temp.chave;
-        tabela[pos].posicao = pos+1;
-        pos++;
-        fseek(pArq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
     }
     
-    int crescente = (tabela[0].chave < tabela[1].chave);// 1 para crescente, 0 para decrescente
-    bench->comp++;
+    //deslocFile serve para arquivos decrescentes
+    long deslocFile = 0;
+    if (situacao == ARQDESC) {   
+        //Desloca o ponteiro para manter as chaves de tam a 1 no arquivo 
+        deslocFile = sizeof(TipoItem) * (MAXTAM - tam);
+        fseek(pArq, deslocFile, SEEK_SET);
+    }
+
+    //Posicao atual da tabela indice
+    int pos = 0;
+    TipoItem temp;
+
+    //Quantidade total de paginas
+    int maxPags = ceil((double)tam / ITENSPAGINA);
+
+    //Faz a tabela de indices
+    while (pos < maxPags)  { 
+        //Le o primeiro item da pag
+        if (fread(&temp, sizeof(TipoItem), 1, pArq) != 1) 
+            break;
+        bench->transf++;
+        tabela[pos].chave = temp.chave; //Guarda a primeira chave da pagina
+        tabela[pos].posicao = pos+1; //Guarda numero da pagina
+        pos++; 
+        //Pula para prox pagina
+        fseek(pArq, sizeof(TipoItem) * (ITENSPAGINA-1), SEEK_CUR);
+    }
+
+    int chaveBusca = chave;
+    int quantitens;
+    TipoItem pagina[ITENSPAGINA];
+
+    //Define qual ordenacao vai usar, crescente ou decrescente
+    int crescente;
+    if(situacao == ARQCRESC)
+        crescente = 1;
+    else if(situacao == ARQDESC)
+        crescente = 0;
+
+    //Busca sequencial na tabela indice para descobrir qual pagina pode conter a chave
+    int i = 0;
     if(crescente){
         while (i < pos && tabela[i].chave <= chaveBusca){
             i++;
             bench->comp++;
-        } // <= para crescente, >= para decrescente,
-        
+        } // <= para crescente
+        bench->comp++;
     }
-    else{
+    else {
+        bench->comp++;
         while (i < pos && tabela[i].chave >= chaveBusca){
             i++;
             bench->comp++;
-        }
+        }// >= para decrescente
+        bench->comp++;
     }
-    if (i == 0){
 
-        fclose(pArq);
+    //Se i = 0 a chave nao pertence a nenhuma pagina
+    if (i == 0) { 
+        printf("Item %d nao encontrado!\n",chave);
+        fclose(pArq);  
         return 0;
-
-    }
-    
+    }    
     else {
-        if (i < pos)       
-            quantitens = ITENSPAGINA;      //ve se a pagina ta completa
+        //Se nao for a ultima pagina ela ta cheia
+        if (i < pos)
+            quantitens = ITENSPAGINA;
         else {
-            fseek (pArq, 0, SEEK_END);
-            quantitens = (ftell(pArq)/sizeof(TipoItem))%ITENSPAGINA;
-            if (!quantitens) 
+            //Calcula a quantidade rela de itens na ultima paginas
+            quantitens = tam % ITENSPAGINA;
+            if (quantitens == 0) 
                 quantitens = ITENSPAGINA;  
         }
-        desloc = (tabela[i-1].posicao-1)*ITENSPAGINA*sizeof(TipoItem);
+        
+        //Calcula o deslocamento da pagina correta
+        long desloc = deslocFile + (tabela[i-1].posicao-1) * ITENSPAGINA * sizeof(TipoItem);
 
+        //Vai para a pagina e le ela
         fseek (pArq, desloc, SEEK_SET);
-        fread (&pagina, sizeof(TipoItem), quantitens, pArq);
+        fread (pagina, sizeof(TipoItem), quantitens, pArq);
         bench->transf++;
-        
+
+        //Faz busca binaria dentro da pagina
+        int ind;
         if(crescente)
-            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaCrescente, bench);
+            ind = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaCrescente, bench);
         else
-            i = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaDecrescente, bench);
+            ind = pesquisaBinaria(pagina, 0, quantitens-1, chaveBusca, comparaDecrescente, bench);
         
-        if(i >= 0) {
-            *item = pagina[i];
-            printItem(item);
+        //Se encontrou printa o item
+        if(ind >= 0) {
+            printItem(&pagina[ind]);
             fclose (pArq);
+            free(tabela);
             return 1;
         }
+        //Se nao encontrou printa nao encontrado
         else {
-            printf("Item nao encontrado.\n");
+            printf("Item %d nao encontrado!\n",chave);
             fclose (pArq);
+            free(tabela);
             return 0;
         }       
     }
-} 
+}

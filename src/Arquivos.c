@@ -1,124 +1,168 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include "Arquivos.h"
 #include "Struct.h"
 
-#define MAXTAM 1000000
-#define BLOCK_SIZE 175000
-void geraString(char *string, int tamString) { // preenche a string de maneira aleatória6
-    for (int i = 0; i < tamString; i++) {
-        string[i] = 'a'+ rand() % 26; // gera um caractere entre 'a' e 'z'
-    }
-    string[tamString] ='\0'; // termina a string
-}
+#define cresc1M "./data/arqCresc-1M.bin"
+#define desc1M "./data/arqDesc-1M.bin"
+#define rand1M "./data/arqRand-1M.bin"
 
-
-void geraAscendente(int qtdTotal, FILE* arq, int printFlag) {
-    TipoItem temp = {0};
-    for (int i = 0; i < qtdTotal; i++) {
-        temp.chave = (i+1);
-        temp.dado1 = rand();
-        //geraString(temp.dado2, 1000);
-        sprintf(temp.dado2,"%d %ld", temp.chave, temp.dado1);
-        sprintf(temp.dado3,"%d %ld", temp.chave, temp.dado1);
-        
-        //geraString(temp.dado3, 5000);
-        if (printFlag)
-            printf(" Chave: %d ", temp.chave);    
-        fwrite(&temp, sizeof(TipoItem), 1, arq);
-    }
-}
-
-void geraDescendente (int qtdTotal, FILE *arqDesc, int printFlag){
-    
-    TipoItem temp = {0};
-    for (int i = qtdTotal; i > 0; i--) {
-        temp.chave = i;
-        temp.dado1 = rand();
-        //geraString(temp.dado2, 1000);
-        //geraString(temp.dado3, 5000);
-        sprintf(temp.dado2,"%d %ld", temp.chave, temp.dado1);
-        sprintf(temp.dado3,"Chave %d dado long %ld", temp.chave, temp.dado1);
-        if (printFlag)
-            printf(" Chave: %d", temp.chave);
-        
-        fwrite(&temp, sizeof(TipoItem), 1, arqDesc);
-    }
-    fclose(arqDesc);
-}
-
-void geraRandom (int qtdTotal, FILE** arqRef, int printFlag){ 
-    TipoItem *copy = calloc(BLOCK_SIZE, sizeof(TipoItem));
-    if (!copy)
-        return;
-    int qtdRestante= qtdTotal;
-    int lidos;
-    int qtdLer;
-    while (qtdRestante > 0) {
-        qtdLer = (qtdRestante > BLOCK_SIZE) ? BLOCK_SIZE : qtdRestante;
-        lidos = fread(copy, sizeof(TipoItem), qtdLer, *arqRef);
-        //TODO: criacao do novo arquivo (string customizada) + copia para ele
-    }
-    
-    
-    
-    TipoItem item1 = {0};
-    TipoItem item2 = {0};
-    int posTroca;
-    for (int i = 0; i < qtdTotal; i++) {
-        posTroca = i + rand() % (qtdTotal - i);
-
-        fseek(*arqRef, i * sizeof(TipoItem), SEEK_SET);
-        fread(&item1, sizeof(TipoItem), 1, *arqRef);
-
-        fseek(*arqRef, posTroca * sizeof(TipoItem), SEEK_SET);
-        fread(&item2, sizeof(TipoItem), 1, *arqRef);   
-
-        fseek(*arqRef, i * sizeof(TipoItem), SEEK_SET);
-        fwrite(&item2, sizeof(TipoItem), 1, *arqRef);
-
-        fseek(*arqRef, posTroca * sizeof(TipoItem), SEEK_SET);
-        fwrite(&item1, sizeof(TipoItem), 1, *arqRef);
-        if(printFlag)
-            printf(" Chave: %d ", item2.chave);
-    }
-    printf("\n");
-    //TODO: atualizacao de parq
-}
-
+//Abre em rb para verificar se o arquivo existe
 int validaArquivo(char *filePath, FILE** pTemp) {
     *pTemp = fopen(filePath, "rb");
     return (*pTemp != NULL);
 }
 
+//Impressao de arquivo quando ele ja existe
+void printFile(FILE *pArq, int tam) {
+    //Buffer para leitura em blocos
+    TipoItem *buffer = malloc(sizeof(TipoItem) * BLOCK_SIZE);
+    if (!buffer)
+        return; 
 
-FILE* criaArquivos(int situacao, int printFlag) { // Cria tres arquivos de 1M
-    static FILE *pArq;
+    int toRead;
+    printf("Chaves presentes no arquivo:\n");
+    //Le o arquivo em blocos e imprime cada chave
+    while (tam > 0) {
+        toRead = (tam > BLOCK_SIZE) ? BLOCK_SIZE : tam;
+        int lidos = fread(buffer, sizeof(TipoItem), toRead, pArq);
+        for (int i = 0; i < lidos; i++) 
+            printf("%d ", buffer[i].chave);
+        tam -= lidos;
+    }
+    printf("\n");
+    free(buffer);
+}
+
+//Gera um arquivo em ordem crescente ou decrescente
+void geraOrdenado(FILE** pArq, char* filePath, int printFlag, int countChave, int chaveSum, long desloc, int tam) {
+    //Valida o arquivo e imprime se necessario
+    if (validaArquivo(filePath, pArq)) {
+        //Posiciona o ponteiro para imprimir corretamente
+        fseek(*pArq, desloc, SEEK_SET);
+        if (printFlag) {
+            printFile(*pArq, tam);
+            fseek(*pArq, desloc, SEEK_SET);
+        }
+        return;
+    }
+    
+    //Cria arquivo e aloca o buffer
+    *pArq = fopen(filePath, "w+b");
+    if (!*pArq)
+        return;
+    TipoItem *buffer = calloc(BLOCK_SIZE, sizeof(TipoItem));
+    if (!buffer)
+        return;
+
+    int qtdRestante = MAXTAM;
+    int toWrite;
+    
+    //Gera o arquivo em blocos na memoria principal e escreve no arquivo
+    while (qtdRestante > 0) {
+        toWrite = (qtdRestante > BLOCK_SIZE) ? BLOCK_SIZE : qtdRestante;
+        for (int i = 0; i < toWrite; i++) {
+            buffer[i].chave = countChave;
+            buffer[i].dado1 = rand();
+            sprintf(buffer[i].dado2, "%d %ld", buffer[i].chave, buffer[i].dado1);
+            sprintf(buffer[i].dado3, "Chave %d dado long %ld", buffer[i].chave, buffer[i].dado1);
+            if (printFlag)
+                printf("Chave: %d ", buffer[i].chave);
+            countChave += chaveSum;
+        }
+        fwrite(buffer, sizeof(TipoItem), toWrite, *pArq);
+        qtdRestante -= toWrite;
+    }
+    //Volta o ponteiro para a posicao inicial
+    fseek(*pArq, desloc, SEEK_SET);
+    free(buffer);
+}
+
+//Gera arquivo aleatorio
+void geraRandom (FILE** arqRef, int printFlag, int tam) { 
+    char fileName[50] = {0};
+    //Cria o caminho do arquivo e abre ele
+    if (tam == MAXTAM)
+        strcpy(fileName, rand1M);
+    else
+        sprintf(fileName, "./data/arqRand-%d.bin", tam);
+
+    *arqRef = fopen(fileName, "r+b");
+    if (*arqRef != NULL) {
+        if (printFlag) {
+            printFile(*arqRef, tam);
+            rewind(*arqRef);
+        }
+        return; 
+    }
+
+    //Abre/cria o arquivo de referencia
+    FILE *pFileCopy = NULL;
+    if (!validaArquivo(cresc1M, &pFileCopy))
+        geraOrdenado(&pFileCopy, cresc1M, printFlag, 1, 1, 0, tam);
+    if (!pFileCopy) 
+        return;
+
+    //Carregamento do arquivo para memoria principal
+    TipoItem *buffer = malloc(tam * sizeof(TipoItem));
+    if (!buffer) {
+        fclose(pFileCopy);
+        return; 
+    }
+    fread(buffer, sizeof(TipoItem), tam, pFileCopy);
+    fclose(pFileCopy);
+    
+    //Embaralhamento do arquivo
+    TipoItem temp = {0};
+    if (printFlag) 
+        printf("Chaves presentes no arquivo:\n");
+    for (int i = 0; i < tam; i++) {
+        int posTroca = i + rand() % (tam - i);
+
+        temp = buffer[i];
+        buffer[i] = buffer[posTroca];
+        buffer[posTroca] = temp;
+
+        if (printFlag)
+            printf("%d ", buffer[i].chave);
+    }
+    if (printFlag)
+        printf("\n");
+
+    //Escreve no arquivo de destino
+    *arqRef = fopen(fileName, "w+b");
+    if (*arqRef) {
+        fwrite(buffer, sizeof(TipoItem), tam, *arqRef);
+        rewind(*arqRef); 
+    }
+
+    free(buffer);
+}
+
+//Cria o arquivo de acordo com a situacao passada
+FILE* criaArquivos(int situacao, int printFlag, int tam) {
+    FILE *pArq = NULL;
+
+    //Cria a pasta data se ela nao existir
+    struct stat st = {0};
+    if (stat("./data", &st) == -1)
+        mkdir("./data", 0777);
+
+    //Decide qual arquivo gerar
     switch (situacao) {
-        case 1:
-            if (!validaArquivo("./data/arqCresc-1M.bin", &pArq)) {
-                pArq = fopen("./data/arqCresc-1M.bin", "w+b");
-                geraAscendente(MAXTAM, pArq, printFlag);
-
-            }
+        case ARQCRESC:
+            geraOrdenado(&pArq, cresc1M, printFlag, 1, 1, 0, tam);
             break;
-        case 2:
-            if (!validaArquivo("./data/arqCresc-1M.bin", &pArq)) {
-                pArq = fopen("./data/arqCresc-1M.bin", "w+b");
-                geraDescendente(MAXTAM, pArq, printFlag);
-            }
+        case ARQDESC:
+            geraOrdenado(&pArq, desc1M, printFlag, MAXTAM, -1, sizeof(TipoItem) * (MAXTAM - tam), tam);
             break;
-        case 3:
-            //TODO: Verificação se o arquivo rand desejado já está gerado na pasta data
-            if (!validaArquivo("./data/arqRand-1M.bin", &pArq)) {
-                pArq = fopen("./data/arqRand-1M.bin", "w+b");
-                geraRandom(MAXTAM, &pArq, printFlag);
-            }
+        case ARQRAND:
+            geraRandom(&pArq, printFlag, tam);
             break;
 
     }
-
-    fseek(pArq, 0, SEEK_SET);
     return pArq;
 }

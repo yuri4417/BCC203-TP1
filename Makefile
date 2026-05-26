@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -Iinclude -g -MMD -MP
-
+CFLAGS = -Wall -Wextra -Iinclude -g -MMD -MP 
+LDLIBS = -lm  
 SRC = $(wildcard src/*.c)
 OBJ = $(SRC:src/%.c=build/%.o)
 DEP = $(OBJ:.o=.d)
@@ -10,7 +10,7 @@ TARGET = pesquisa
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $(TARGET)
+	$(CC) $(OBJ) -o $(TARGET) $(LDLIBS)
 
 build/%.o: src/%.c
 	@mkdir -p build
