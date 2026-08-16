@@ -49,7 +49,7 @@ Practical Assignment for **BCC203** — Data Structures II at **UFOP** (Federal 
 
 | Constant     | Value    | Description                         |
 |-------------|----------|-------------------------------------|
-| `BLOCK_SIZE`| 175000   | Block size in bytes                 |
+| `BLOCK_SIZE`| 175000   | Block size                 |
 | `ITENS_PAGINA` | 50   | Items per page                      |
 | `M`         | 50       | Order of B-Trees                    |
 | `QTD_TESTES`| 10       | Number of benchmark tests           |
