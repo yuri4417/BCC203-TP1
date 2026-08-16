@@ -2,7 +2,7 @@
 
 ## About
 
-Practical Assignment for **BCC203** — Data Structures II at **UFOP** (Federal University of Ouro Preto). This project implements and compares four indexed access methods for key search in files:
+Practical Assignment for **BCC203** — Data Structures II at **UFOP** (Federal University of Ouro Preto). This project implements and compares four External Search methods for key search in files:
 
 1. **Indexed Access** — separate index structure with a lookup table
 2. **BST** — Binary Search Tree stored on disk
@@ -73,8 +73,8 @@ make
 
 | Parameter       | Valid values             | Description                          |
 |----------------|-------------------------|--------------------------------------|
-| `<method>`     | 1, 2, 3, 4              | Indexed access method                |
-| `<quantity>`   | Positive integer         | Number of items in the file          |
+| `<method>`     | 1, 2, 3, 4              | Search method                |
+| `<quantity>`   | Positive integer         | Number of items in the input file          |
 | `<situation>`  | 1, 2, 3                 | File order (see below)               |
 | `<key>`        | Non-zero integer         | Key to search for                    |
 | `[-P]`         | Optional                 | Print file keys                      |
