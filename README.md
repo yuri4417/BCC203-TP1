@@ -1,4 +1,4 @@
-# External Search Methods — Indexed Access
+# External Search Methods
 
 ## About
 
